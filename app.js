@@ -141,20 +141,25 @@ async function initAuth() {
       }
 
       // Vérification que le membre est bien "en attente d'inscription"
-      const { data: importedMember, error: importCheckError } = await supabaseClient
-        .from('imported_members')
-        .select('email')
-        .eq('email', email.trim().toLowerCase())
-        .maybeSingle();
+      const { count: profileCount } = await supabaseClient.from('profiles').select('*', { count: 'exact', head: true });
+      const isFirstUser = profileCount === 0;
 
-      if (importCheckError) {
-        toggleLoading(false);
-        return alert("Erreur lors de la vérification de votre éligibilité : " + importCheckError.message);
-      }
+      if (!isFirstUser) {
+        const { data: importedMember, error: importCheckError } = await supabaseClient
+          .from('imported_members')
+          .select('email')
+          .eq('email', email.trim().toLowerCase())
+          .maybeSingle();
 
-      if (!importedMember) {
-        toggleLoading(false);
-        return alert("Création de compte refusée : Votre e-mail n'est pas en attente d'inscription dans la liste des membres. Veuillez demander à un administrateur de vous ajouter au préalable.");
+        if (importCheckError) {
+          toggleLoading(false);
+          return alert("Erreur lors de la vérification de votre éligibilité : " + importCheckError.message);
+        }
+
+        if (!importedMember) {
+          toggleLoading(false);
+          return alert("Création de compte refusée : Votre e-mail n'est pas en attente d'inscription dans la liste des membres. Veuillez demander à un administrateur de vous ajouter au préalable.");
+        }
       }
 
       const { data, error } = await supabaseClient.auth.signUp({
@@ -177,7 +182,7 @@ async function initAuth() {
                 id: data.user.id,
                 email: email,
                 full_name: pseudo,
-                role: 'member'
+                role: isFirstUser ? 'admin' : 'member'
               });
           } catch (err) {
             console.warn("Échec de l'upsert direct du profil (géré par trigger Supabase) :", err);
