@@ -257,13 +257,21 @@ function applyRoleAccessControl() {
   const navAdmin = document.querySelector('.nav-menu li[data-section="admin"]');
   const mobileNavBar = document.getElementById('mobile-nav-bar');
 
+  // Find currently active section
+  const activeNav = document.querySelector('.nav-menu li.active');
+  const currentSection = activeNav ? activeNav.getAttribute('data-section') : null;
+
   if (role === 'admin') {
     if (navHome) navHome.style.display = '';
     if (navTournaments) navTournaments.style.display = '';
     if (navAdmin) navAdmin.style.display = '';
     if (mobileNavBar) mobileNavBar.style.display = '';
 
-    switchSection('home');
+    if (currentSection) {
+      switchSection(currentSection);
+    } else {
+      switchSection('home');
+    }
   } else {
     if (navHome) navHome.style.display = 'none';
     if (navTournaments) navTournaments.style.display = 'none';
@@ -271,7 +279,11 @@ function applyRoleAccessControl() {
     if (mobileNavBar) mobileNavBar.style.display = 'none';
 
     // Les membres normaux sont strictement redirigés vers Gestion Club
-    switchSection('management');
+    if (currentSection !== 'management') {
+      switchSection('management');
+    } else {
+      switchSection('management');
+    }
   }
 }
 
@@ -433,6 +445,13 @@ function initNavigation() {
         price_at_time: price,
         quantity: quantity
       });
+
+      if (!error && drink && drink.stock !== null && drink.stock !== undefined) {
+        // Décrémenter le stock
+        const newStock = drink.stock - quantity;
+        await supabaseClient.from('drinks').update({ stock: newStock }).eq('id', id);
+      }
+
       toggleLoading(false);
 
       if (error) {
@@ -910,7 +929,14 @@ async function logConsumption(id, name, price) {
   document.getElementById('drink-confirm-total').textContent = `${price.toFixed(2)}€`;
 
   const stockEl = document.getElementById('drink-confirm-stock');
-  if (stockEl) stockEl.textContent = '';
+  if (stockEl) {
+    if (drink && drink.stock !== null && drink.stock !== undefined) {
+      stockEl.textContent = `Stock restant : ${drink.stock}`;
+      stockEl.style.color = drink.stock <= 0 ? '#ef4444' : 'var(--text-muted)';
+    } else {
+      stockEl.textContent = '';
+    }
+  }
 
   const imgContainer = document.getElementById('drink-confirm-image-container');
   if (drink && drink.image_url) {
@@ -929,7 +955,70 @@ async function logConsumption(id, name, price) {
 window.logConsumption = logConsumption;
 
 // --- ADMIN LOGIC ---
-// Sera remplacé par la vraie logique
+window.openStockModal = function(drinkId, drinkName) {
+  const modal = document.getElementById('stock-modal');
+  document.getElementById('stock-drink-name').textContent = drinkName;
+  document.getElementById('stock-drink-id').value = drinkId;
+  document.getElementById('stock-input-value').value = '0';
+  document.getElementById('stock-action-type').value = 'add';
+  
+  // Reset tabs
+  document.getElementById('tab-add-stock').classList.add('active');
+  document.getElementById('tab-set-stock').classList.remove('active');
+  document.getElementById('stock-input-label').textContent = 'Quantité à ajouter (peut être négatif)';
+  
+  modal.classList.remove('hidden');
+};
+
+document.getElementById('tab-add-stock')?.addEventListener('click', (e) => {
+  e.target.classList.add('active');
+  document.getElementById('tab-set-stock').classList.remove('active');
+  document.getElementById('stock-action-type').value = 'add';
+  document.getElementById('stock-input-label').textContent = 'Quantité à ajouter (peut être négatif)';
+  document.getElementById('stock-input-value').value = '0';
+});
+
+document.getElementById('tab-set-stock')?.addEventListener('click', (e) => {
+  e.target.classList.add('active');
+  document.getElementById('tab-add-stock').classList.remove('active');
+  document.getElementById('stock-action-type').value = 'set';
+  document.getElementById('stock-input-label').textContent = 'Nouveau stock réel (Inventaire)';
+  
+  // Set to current stock
+  const drinkId = parseInt(document.getElementById('stock-drink-id').value);
+  const drink = drinks.find(d => d.id === drinkId);
+  document.getElementById('stock-input-value').value = drink?.stock || 0;
+});
+
+document.getElementById('save-stock-btn')?.addEventListener('click', async () => {
+  const drinkId = parseInt(document.getElementById('stock-drink-id').value);
+  const actionType = document.getElementById('stock-action-type').value;
+  const inputValue = parseInt(document.getElementById('stock-input-value').value);
+  
+  if (isNaN(inputValue)) return alert("Veuillez saisir un nombre valide.");
+  
+  const drink = drinks.find(d => d.id === drinkId);
+  if (!drink) return;
+
+  let newStock = 0;
+  if (actionType === 'add') {
+    const currentStock = drink.stock || 0;
+    newStock = currentStock + inputValue;
+  } else {
+    newStock = inputValue;
+  }
+
+  toggleLoading(true);
+  const { error } = await supabaseClient.from('drinks').update({ stock: newStock }).eq('id', drinkId);
+  toggleLoading(false);
+
+  if (error) {
+    alert("Erreur lors de la mise à jour du stock : " + error.message);
+  } else {
+    document.getElementById('stock-modal').classList.add('hidden');
+    loadAdminData();
+  }
+});
 
 // --- UTILS ---
 function showView(id) {
@@ -1249,6 +1338,33 @@ async function loadAdminData() {
         `;
     dBody.appendChild(row);
   });
+
+  const stockBody = document.getElementById('admin-stock-list');
+  if (stockBody) {
+    stockBody.innerHTML = '';
+    drinks.forEach(d => {
+      // Don't show stock for memberships (adhésions/abonnements)
+      if (isMembership(d)) return;
+      const row = document.createElement('tr');
+      const safeName = d.name.replace(/'/g, "\\'");
+      const stockVal = d.stock !== null && d.stock !== undefined ? d.stock : 'Non géré';
+      const stockDisplay = stockVal <= 0 ? `<span class="text-danger font-bold">${stockVal}</span>` : `<span class="text-success font-bold">${stockVal}</span>`;
+      
+      row.innerHTML = `
+        <td>${d.name}</td>
+        <td>${stockVal === 'Non géré' ? stockVal : stockDisplay}</td>
+        <td>
+          <div style="display: flex; gap: 0.5rem;">
+            <button class="btn btn-outline" title="Gérer le stock" onclick="openStockModal(${d.id}, '${safeName}')">
+              <i data-lucide="package-plus" size="16"></i>
+            </button>
+          </div>
+        </td>
+      `;
+      stockBody.appendChild(row);
+    });
+  }
+
 
   const { data: sTypes } = await supabaseClient.from('subscription_types').select('*');
   const sBody = document.getElementById('admin-subtype-list');

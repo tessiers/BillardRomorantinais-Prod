@@ -7,7 +7,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <title>Portail Club - Billard & Équitation</title>
+  <title>Portail Club - Billard Blackball Romorantinais</title>
   <link rel="stylesheet" href="style.css?v=2.3.2">
   <link rel="stylesheet" href="tournament_hero.css">
   <style>
@@ -102,23 +102,28 @@
   </div>
 
   <!-- Écran de Verrouillage (Inactivité) -->
-  <div id="lock-screen-view" class="auth-view hidden" style="z-index: 10000; position: fixed; inset: 0; background: var(--bg-dark); display: flex; align-items: center; justify-content: center; padding: 1rem;">
+  <div id="lock-screen-view" class="auth-view hidden"
+    style="z-index: 10000; position: fixed; inset: 0; background: var(--bg-dark); display: flex; align-items: center; justify-content: center; padding: 1rem;">
     <div class="auth-card card">
       <div class="logo-circle large">
         <i data-lucide="lock" style="width: 40px; height: 40px; color: var(--accent-orange);"></i>
       </div>
       <h2 style="margin-bottom: 0.75rem;">Session verrouillée</h2>
-      <p class="card-subtitle" style="margin-top: 0; margin-bottom: 2rem;">Veuillez saisir votre mot de passe pour <strong id="lock-email-display"></strong></p>
+      <p class="card-subtitle" style="margin-top: 0; margin-bottom: 2rem;">Veuillez saisir votre mot de passe pour
+        <strong id="lock-email-display"></strong>
+      </p>
 
       <form id="lock-form">
         <div class="input-group">
           <label>Mot de passe</label>
           <input type="password" id="lock-password" required placeholder="••••••••" autocomplete="new-password">
         </div>
-        <button type="submit" id="lock-submit-btn" class="btn btn-primary" style="width: 100%; justify-content: center; margin-bottom: 1rem; background: var(--accent-orange); border-color: var(--accent-orange);">
+        <button type="submit" id="lock-submit-btn" class="btn btn-primary"
+          style="width: 100%; justify-content: center; margin-bottom: 1rem; background: var(--accent-orange); border-color: var(--accent-orange);">
           Déverrouiller <i data-lucide="unlock"></i>
         </button>
-        <button type="button" id="lock-switch-user-btn" class="btn btn-outline" style="width: 100%; justify-content: center;">
+        <button type="button" id="lock-switch-user-btn" class="btn btn-outline"
+          style="width: 100%; justify-content: center;">
           Changer d'utilisateur
         </button>
       </form>
@@ -132,11 +137,11 @@
         <div class="logo-circle">
           <img src="Logo.jpg" alt="BC41" style="width: 100%; border-radius: 50%;" onerror="this.style.display='none'">
         </div>
-        <h1>Billard Club 41</h1>
+        <h1>Billard Blackball Romorantinais</h1>
         <!-- Raccourcis contacts compacts -->
         <div class="sidebar-contacts"
           style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 12px; padding: 10px; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border); border-radius: 8px; width: 100%; text-align: left;">
-          <a href="https://www.facebook.com/profile.php?id=61572776020869" target="_blank"
+          <a href="https://www.facebook.com/profile.php?id=100057091914276&locale=fr_FR" target="_blank"
             style="display: flex; align-items: center; gap: 8px; color: var(--text-muted); text-decoration: none; font-size: 0.8rem; transition: color 0.2s;"
             onmouseover="this.style.color='var(--text-main)'" onmouseout="this.style.color='var(--text-muted)'">
             <svg viewBox="0 0 24 24" width="14" height="14" fill="#1877f2" style="flex-shrink: 0;">
@@ -144,7 +149,8 @@
                 d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
             </svg> <span style="font-weight: 500;">Page Facebook</span>
           </a>
-          <a href="https://www.youtube.com/@bonmatch-o7g" target="_blank"
+          <a href="https://www.youtube.com/@tvlives3br?app=desktop&fbclid=IwY2xjawUSllxwZG9mBWV4dG4DYWVtAjEwAGJyaWQRMGt2N1YzM25FbFNLS3JKWUNzcnRjBmFwcF9pZBAyMjIwMzkxNzg4MjAwODkyAAEedmXAo6tgpRvgmIpZfRQSy1KJxkchYBAMKoTV7E5PEVaiBchK94fvh0YBSrk_aem_zNa9NMmQ_AxgDDVBfKMCKg"
+            target="_blank"
             style="display: flex; align-items: center; gap: 8px; color: var(--text-muted); text-decoration: none; font-size: 0.8rem; transition: color 0.2s;"
             onmouseover="this.style.color='var(--text-main)'" onmouseout="this.style.color='var(--text-muted)'">
             <svg viewBox="0 0 24 24" width="14" height="14" style="flex-shrink: 0;">
@@ -152,29 +158,9 @@
                 d="M23.498 6.163a3.003 3.003 0 0 0-2.11-2.11C19.517 3.545 12 3.545 12 3.545s-7.517 0-9.388.508a3.003 3.003 0 0 0-2.11 2.11C0 8.033 0 12 0 12s0 3.967.502 5.837a3.003 3.003 0 0 0 2.11 2.11c1.871.508 9.388.508 9.388.508s7.517 0 9.388-.508a3.003 3.003 0 0 0 2.11-2.11C24 15.967 24 12 24 12s0-3.967-.502-5.837z"
                 fill="#FF0000" />
               <polygon points="9.545,15.568 9.545,8.432 15.818,12" fill="#FFFFFF" />
-            </svg> <span style="font-weight: 500;">bonmatch-o7g</span>
+            </svg> <span style="font-weight: 500;">Chaîne YouTube</span>
           </a>
-          <a href="tel:0612853818"
-            style="display: flex; align-items: center; gap: 8px; color: var(--text-muted); text-decoration: none; font-size: 0.8rem; transition: color 0.2s;"
-            onmouseover="this.style.color='var(--text-main)'" onmouseout="this.style.color='var(--text-muted)'">
-            <i data-lucide="phone" style="width: 14px; height: 14px; color: var(--accent-green);"></i> <span
-              style="font-weight: 500;">06 12 85 38 18</span>
-          </a>
-          <a href="https://wa.me/33612853818" target="_blank"
-            style="display: flex; align-items: center; gap: 8px; color: var(--text-muted); text-decoration: none; font-size: 0.8rem; transition: color 0.2s;"
-            onmouseover="this.style.color='var(--text-main)'" onmouseout="this.style.color='var(--text-muted)'">
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="#25D366">
-              <path
-                d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.335-1.662c1.746.953 3.71 1.458 5.704 1.459h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
-            </svg>
-            <span style="font-weight: 500;">WhatsApp</span>
-          </a>
-          <a href="mailto:billardclub41@gmail.com"
-            style="display: flex; align-items: center; gap: 8px; color: var(--text-muted); text-decoration: none; font-size: 0.8rem; transition: color 0.2s;"
-            onmouseover="this.style.color='var(--text-main)'" onmouseout="this.style.color='var(--text-muted)'">
-            <i data-lucide="mail" style="width: 14px; height: 14px; color: var(--accent-gold);"></i> <span
-              style="font-weight: 500;">billardclub41@gmail.com</span>
-          </a>
+
         </div>
       </div>
 
@@ -235,7 +221,7 @@
           <div class="logo-circle-mini">
             <img src="Logo.jpg" alt="BC41" onerror="this.style.display='none'">
           </div>
-          <span class="mobile-title">Billard Club 41</span>
+          <span class="mobile-title">Billard Blackball Romorantinais</span>
         </div>
 
         <div class="user-profile" id="user-profile-menu-trigger">
@@ -265,8 +251,7 @@
         <section id="section-home" class="view active">
           <div class="welcome-hero">
             <div class="hero-text">
-              <h2>Bienvenue au BILLARD CLUB 41</h2>
-              <p>Votre espace privilégié pour le billard anglais et l'équitation.</p>
+              <h2>Bienvenue au BILLARD BLACKBALL ROMORANTINAIS</h2>
             </div>
           </div>
 
@@ -857,6 +842,7 @@
               <button class="btn-tab active" data-tab="adm-members">Membres</button>
               <button class="btn-tab" data-tab="adm-consumptions">Consommations</button>
               <button class="btn-tab" data-tab="adm-drinks">Boissons</button>
+              <button class="btn-tab" data-tab="adm-stocks">Stock Boissons</button>
               <button class="btn-tab" data-tab="adm-subs">Abonnements</button>
             </div>
           </div>
@@ -954,6 +940,26 @@
             </div>
           </div>
 
+          <!-- Stocks Section -->
+          <div id="adm-stocks" class="admin-pane card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+              <h3><i data-lucide="package"></i> Gestion des Stocks</h3>
+            </div>
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Boisson</th>
+                    <th>Stock Actuel</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="admin-stock-list">
+                  <!-- Injecté par JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
 
 
           <!-- Abonnements Section -->
@@ -1089,6 +1095,32 @@
                 onclick="document.getElementById('subtype-modal').classList.add('hidden')">Annuler</button>
               <button class="btn-main" id="save-subtype-btn"
                 style="border:none; padding: 8px 16px; border-radius:8px;">Sauvegarder</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal de Stock -->
+        <div id="stock-modal" class="modal hidden">
+          <div class="modal-content card" style="max-width: 400px; width: 100%; border: 1px solid var(--border);">
+            <h3 id="stock-modal-title">Gérer le stock</h3>
+            <p id="stock-drink-name" style="font-weight: bold; margin-bottom: 1rem; color: var(--accent-green);">Boisson</p>
+            
+            <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">
+               <button type="button" class="btn-tab active" id="tab-add-stock" style="padding: 0.5rem; font-size: 0.9rem;">Réapprovisionner</button>
+               <button type="button" class="btn-tab" id="tab-set-stock" style="padding: 0.5rem; font-size: 0.9rem;">Inventaire</button>
+            </div>
+
+            <div class="input-group">
+              <label id="stock-input-label">Quantité à ajouter</label>
+              <input type="number" id="stock-input-value" value="0">
+            </div>
+
+            <input type="hidden" id="stock-drink-id">
+            <input type="hidden" id="stock-action-type" value="add">
+
+            <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1.5rem;">
+              <button class="btn-alt" onclick="document.getElementById('stock-modal').classList.add('hidden')">Annuler</button>
+              <button class="btn-main" id="save-stock-btn" style="border:none; padding: 8px 16px; border-radius:8px;">Valider</button>
             </div>
           </div>
         </div>

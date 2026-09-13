@@ -1,52 +1,40 @@
 :root {
-    /* Modern Dark Glassmorphism Theme with Enhanced Contrast */
-    --bg-main: #0f172a;
-    /* Fond principal ardoise un peu plus clair pour plus de contraste */
-    --bg-sidebar: rgba(15, 23, 42, 0.85);
-    /* Sidebar plus opaque et contrastée */
+    /* Vibrant Jersey Theme (Sky Blue, Gold, and a little Black) */
+    --bg-main: #5ab2ff;
+    --bg-sidebar: rgba(10, 37, 64, 0.95); /* Beau bleu marine profond */
     --text-main: #ffffff;
-    /* Texte principal blanc pur */
-    --text-muted: #cbd5e1;
-    /* Texte secondaire gris clair très lisible */
-    --accent-gold: #10b981;
-    /* Remplacé par Vert Néon (Gagnant) */
-    --accent-green: #10b981;
-    /* Vert Néon */
-    --accent-leather: #6366f1;
-    /* Remplacé par Indigo vibrant */
-    --leather: #3b82f6;
-    /* Remplacé par Bleu Électrique */
-    --wood: #8b5cf6;
-    /* Remplacé par Violet Néon */
+    --text-muted: #e2e8f0;
+    --accent-gold: #e5b341;
+    --accent-green: #e5b341; /* Primary actions in gold */
+    --accent-leather: #0a2540; /* Navy blue accents */
+    --leather: #0a2540;
+    --wood: #e5b341;
     --white: #ffffff;
-    --glass-light: rgba(255, 255, 255, 0.08);
-    /* Blanc translucide plus visible pour les cartes */
-    --border: rgba(255, 255, 255, 0.18);
-    /* Bordures vitrées plus nettes et contrastées */
-    --shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-    /* Ombre profonde plus marquée */
+    --glass-light: rgba(0, 0, 0, 0.2);
+    --border: rgba(255, 255, 255, 0.15); /* Bordures plus claires pour s'accorder avec le bleu */
+    --shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
     --radius: 16px;
 
     /* Variables de compatibilité Tournois (mappées sur le thème Moderne) */
-    --bg: var(--bg-main);
-    --bg-glass: rgba(15, 23, 42, 0.88);
-    --bg-deep: #090d16;
-    --panel: rgba(30, 41, 59, 0.75);
-    --panel-soft: rgba(30, 41, 59, 0.45);
-    --accent: var(--accent-green);
-    --accent-rgb: 16, 185, 129;
-    --accent-glow: rgba(16, 185, 129, 0.35);
-    --accent-deep: #059669;
+    --bg: #5ab2ff;
+    --bg-glass: rgba(10, 37, 64, 0.88); /* Navy translucent for modals */
+    --bg-deep: #4da4ef;
+    --panel: rgba(10, 37, 64, 0.85); /* Navy glassmorphism cards */
+    --panel-soft: rgba(10, 37, 64, 0.5);
+    --accent: var(--accent-gold);
+    --accent-rgb: 229, 179, 65;
+    --accent-glow: rgba(229, 179, 65, 0.4);
+    --accent-deep: #c49425;
     --danger: #ef4444;
     --text: var(--text-main);
     --muted: var(--text-muted);
     --chakra-red: #ef4444;
-    --chakra-orange: #f59e0b;
-    --chakra-yellow: #fbbf24;
-    --chakra-green: #10b981;
-    --chakra-blue: #3b82f6;
-    --chakra-indigo: #6366f1;
-    --chakra-violet: #8b5cf6;
+    --chakra-orange: #e5b341;
+    --chakra-yellow: #fcd34d;
+    --chakra-green: #e5b341;
+    --chakra-blue: #5ab2ff;
+    --chakra-indigo: #0a2540; /* Navy */
+    --chakra-violet: #e5b341;
 }
 
 * {
@@ -149,8 +137,8 @@
     align-items: center;
     justify-content: center;
     background-image:
-        radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.15) 0px, transparent 50%),
-        radial-gradient(at 100% 100%, rgba(59, 130, 246, 0.15) 0px, transparent 50%);
+        radial-gradient(at 0% 0%, rgba(229, 179, 65, 0.4) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(10, 37, 64, 0.3) 0px, transparent 50%);
 }
 
 .auth-card {
@@ -225,8 +213,8 @@ body {
     font-family: 'Outfit', sans-serif;
     background-color: var(--bg-main);
     background-image:
-        radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.15) 0px, transparent 50%),
-        radial-gradient(at 100% 100%, rgba(59, 130, 246, 0.15) 0px, transparent 50%);
+        radial-gradient(at 0% 0%, rgba(229, 179, 65, 0.4) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(10, 37, 64, 0.3) 0px, transparent 50%);
     background-attachment: fixed;
     color: var(--text-main);
     overflow: hidden;
