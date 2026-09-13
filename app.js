@@ -255,7 +255,15 @@ function handleSignOut() {
 
 // --- CONTROLE D'ACCES PAR ROLE & VERROUILLAGE D'INACTIVITE ---
 function applyRoleAccessControl() {
-  const role = currentUser?.profile?.role || 'member';
+  let role = currentUser?.profile?.role || 'member';
+  
+  // SÉCURITÉ ABSOLUE : Forcer le rôle admin pour le créateur
+  if (currentUser?.email === 'sebastien.tessier41@orange.fr') {
+    role = 'admin';
+  }
+  if (role) {
+    role = role.trim().toLowerCase(); // au cas où il y aurait une majuscule ou un espace dans la base
+  }
 
   const navHome = document.querySelector('.nav-menu li[data-section="home"]');
   const navTournaments = document.querySelector('.nav-menu li[data-section="tournaments"]');
