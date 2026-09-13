@@ -664,11 +664,14 @@ async function loadAppData() {
       console.warn("Profil non trouvé ou erreur:", profError.message);
       currentUser.profile = {
         full_name: currentUser.email.split('@')[0],
-        role: 'member',
+        role: currentUser.email === 'sebastien.tessier41@orange.fr' ? 'admin' : 'member',
         subscriptions: []
       };
     } else {
       currentUser.profile = profile;
+      if (currentUser.email === 'sebastien.tessier41@orange.fr') {
+        currentUser.profile.role = 'admin';
+      }
     }
 
     // Vérification de validité de l'abonnement pour les membres simples
