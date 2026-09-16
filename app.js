@@ -274,22 +274,33 @@ function applyRoleAccessControl() {
   const activeNav = document.querySelector('.nav-menu li.active');
   const currentSection = activeNav ? activeNav.getAttribute('data-section') : null;
 
-  if (role === 'admin') {
+  const canManageStock = currentUser?.profile?.can_manage_stock === true;
+  const isSuperAdmin = role === 'admin';
+  const isAdminTabVisible = isSuperAdmin || canManageStock;
+
+  if (isSuperAdmin) {
     if (navHome) navHome.style.display = '';
     if (navTournaments) navTournaments.style.display = '';
-    if (navAdmin) navAdmin.style.display = '';
     if (mobileNavBar) mobileNavBar.style.display = '';
-
-    if (currentSection) {
-      switchSection(currentSection);
-    } else {
-      switchSection('home');
-    }
   } else {
     if (navHome) navHome.style.display = 'none';
     if (navTournaments) navTournaments.style.display = 'none';
+  }
+
+  if (isAdminTabVisible) {
+    if (navAdmin) navAdmin.style.display = '';
+    if (mobileNavBar) mobileNavBar.style.display = ''; // Assure mobile nav is visible for admin tab
+    
+    if (currentSection) {
+      switchSection(currentSection);
+    } else {
+      switchSection(isSuperAdmin ? 'home' : 'admin');
+    }
+  } else {
     if (navAdmin) navAdmin.style.display = 'none';
-    if (mobileNavBar) mobileNavBar.style.display = 'none';
+    if (!isSuperAdmin) {
+      if (mobileNavBar) mobileNavBar.style.display = 'none';
+    }
 
     // Les membres normaux sont strictement redirigés vers Gestion Club
     if (currentSection !== 'management') {
@@ -463,6 +474,44 @@ function initNavigation() {
         // Décrémenter le stock
         const newStock = drink.stock - quantity;
         await supabaseClient.from('drinks').update({ stock: newStock }).eq('id', id);
+
+        // Alerte EmailJS si on atteint ou passe sous le seuil d'alerte
+        const alertThreshold = drink.alert_threshold || 0;
+        if (newStock <= alertThreshold && drink.stock > alertThreshold) {
+          if (typeof emailjs !== 'undefined') {
+            // Fetch global stock to include in the email
+            const { data: allDrinks } = await supabaseClient.from('drinks').select('*');
+            let alertList = "";
+            let globalStock = "";
+            
+            if (allDrinks) {
+              const currentInList = allDrinks.find(d => d.id === id);
+              if (currentInList) currentInList.stock = newStock;
+              
+              allDrinks.forEach(d => {
+                const stock = d.stock || 0;
+                const threshold = d.alert_threshold || 0;
+                globalStock += `${d.name} : ${stock}\n`;
+                
+                if (stock <= threshold) {
+                  alertList += `- ${d.name} (Stock: ${stock}, Seuil: ${threshold})\n`;
+                }
+              });
+            }
+
+            emailjs.send("VOTRE_SERVICE_ID", "VOTRE_TEMPLATE_ID", {
+              article_nom: drink.name,
+              alert_list: alertList || "Aucune autre alerte",
+              global_stock: globalStock
+            }).then(() => {
+              console.log("Email d'alerte envoyé pour " + drink.name);
+            }).catch(err => {
+              console.error("Erreur envoi EmailJS :", err);
+            });
+          } else {
+             console.warn("EmailJS non chargé.");
+          }
+        }
       }
 
       toggleLoading(false);

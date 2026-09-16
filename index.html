@@ -51,6 +51,13 @@
     rel="stylesheet">
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+  <script type="text/javascript">
+    (function () {
+      // Configuration EmailJS avec la clé publique (à remplacer par la vôtre)
+      // emailjs.init("VOTRE_PUBLIC_KEY");
+    })();
+  </script>
 </head>
 
 <body>
@@ -944,6 +951,10 @@
           <div id="adm-stocks" class="admin-pane card">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
               <h3><i data-lucide="package"></i> Gestion des Stocks</h3>
+              <button class="btn-alt" id="export-stock-csv-btn"
+                style="display: flex; align-items: center; gap: 0.5rem; padding: 6px 12px; border-radius: 8px; border: none;">
+                <i data-lucide="download" style="width:16px;"></i> Exporter CSV
+              </button>
             </div>
             <div class="table-wrapper">
               <table>
@@ -1012,6 +1023,10 @@
               <label>Date de fin (Validité)</label>
               <input type="date" id="manual-mem-end-date" class="custom-select">
             </div>
+            <div style="display: flex; gap: 8px; align-items: center; margin-top: 1rem;">
+              <input type="checkbox" id="manual-mem-can-manage-stock" style="width: auto;">
+              <label for="manual-mem-can-manage-stock" style="font-weight: 600; cursor: pointer; margin: 0;">Droit de Gestionnaire de stocks</label>
+            </div>
             <div class="input-group" style="margin-top: 1rem;">
               <label>Photo de profil (Facultatif)</label>
               <div style="display: flex; gap: 0.5rem; align-items: center;">
@@ -1045,6 +1060,10 @@
             <div class="input-group">
               <label>Prix (€)</label>
               <input type="number" step="0.5" id="drink-price">
+            </div>
+            <div class="input-group">
+              <label>Seuil d'alerte (Quantité)</label>
+              <input type="number" id="drink-alert-threshold" value="0" min="0">
             </div>
             <div class="input-group">
               <label>Nom de l'icône Lucide (ex: coffee, beer, wine)</label>
