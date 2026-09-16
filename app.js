@@ -1180,6 +1180,32 @@ window.openSubscriptionFor = openSubscriptionFor;
 async function loadAdminData() {
   const todayStr = new Date().toISOString().split('T')[0];
 
+  const isSuperAdmin = currentUser?.profile?.role === 'admin';
+  const canManageStock = currentUser?.profile?.can_manage_stock === true;
+  
+  // Gérer la visibilité des onglets
+  document.querySelectorAll('.btn-tab').forEach(btn => {
+    const tabName = btn.getAttribute('data-tab');
+    if (isSuperAdmin) {
+      btn.style.display = 'inline-block';
+    } else if (canManageStock) {
+      if (tabName === 'adm-drinks' || tabName === 'adm-stocks') {
+        btn.style.display = 'inline-block';
+      } else {
+        btn.style.display = 'none';
+      }
+    }
+  });
+  
+  // Si non admin mais gestionnaire, forcer l'onglet actif sur adm-drinks
+  if (!isSuperAdmin && canManageStock) {
+      document.querySelectorAll('.btn-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.admin-pane').forEach(p => p.classList.remove('active'));
+      const drinksTabBtn = document.querySelector('.btn-tab[data-tab="adm-drinks"]');
+      if (drinksTabBtn) drinksTabBtn.classList.add('active');
+      document.getElementById('adm-drinks')?.classList.add('active');
+  }
+
   // 1. Unified Members Fetch
   const { data: mems } = await supabaseClient.from('profiles').select('*, subscriptions(*, subscription_types(*)), consumptions(*)').order('full_name');
 
@@ -1640,6 +1666,7 @@ document.getElementById('save-manual-member-btn').addEventListener('click', asyn
   const endDate = document.getElementById('manual-mem-end-date').value;
   let avatarUrl = document.getElementById('manual-mem-avatar-url') ? document.getElementById('manual-mem-avatar-url').value : '';
   const avatarFile = document.getElementById('manual-mem-avatar-file') ? document.getElementById('manual-mem-avatar-file').files[0] : null;
+  const canManageStock = document.getElementById('manual-mem-can-manage-stock') ? document.getElementById('manual-mem-can-manage-stock').checked : false;
 
   if (!name || !email) return alert("Le nom et l'email sont requis.");
   if (typeId && !endDate) return alert("La date de fin est requise pour modifier l'abonnement.");
@@ -1697,11 +1724,17 @@ document.getElementById('save-manual-member-btn').addEventListener('click', asyn
       .maybeSingle();
 
     if (profile) {
+      let profileUpdates = {};
       if (typeof avatarUrl !== 'undefined' && (avatarUrl || avatarUrl === '')) {
+        profileUpdates.avatar_url = avatarUrl;
+      }
+      profileUpdates.can_manage_stock = canManageStock;
+      
+      if (Object.keys(profileUpdates).length > 0) {
         try {
-          await supabaseClient.from('profiles').update({ avatar_url: avatarUrl }).eq('id', profile.id);
+          await supabaseClient.from('profiles').update(profileUpdates).eq('id', profile.id);
         } catch (err) {
-          console.warn("Erreur MAJ avatar", err);
+          console.warn("Erreur MAJ profile", err);
         }
       }
 
@@ -1731,9 +1764,55 @@ document.getElementById('save-manual-member-btn').addEventListener('click', asyn
   }
 });
 
+// --- CSV EXPORT (Consommations & Stocks) ---
+document.getElementById('export-stock-csv-btn')?.addEventListener('click', async () => {
+  show('loading');
+  try {
+    const { data: consData, error: consErr } = await supabaseClient.from('consumptions').select('*, profiles(full_name, email), drinks(name)').order('created_at', { ascending: false });
+    const { data: drinksData, error: drinksErr } = await supabaseClient.from('drinks').select('*');
 
+    if (consErr) throw consErr;
+    if (drinksErr) throw drinksErr;
 
-async function clearMemberBalance(memberId) {
+    let csvContent = "data:text/csv;charset=utf-8,\uFEFF"; // BOM for Excel
+
+    // 1. Stock Actuel
+    csvContent += "--- ÉTAT DES STOCKS ---\n";
+    csvContent += "Boisson;Stock Actuel;Seuil Alerte\n";
+    drinksData.forEach(d => {
+      csvContent += `"${d.name}";${d.stock || 0};${d.alert_threshold || 0}\n`;
+    });
+
+    csvContent += "\n--- HISTORIQUE DES CONSOMMATIONS ---\n";
+    csvContent += "Date;Membre;Email;Boisson;Quantité;Prix Unitaire;Total;Payé\n";
+    
+    consData.forEach(c => {
+      const date = new Date(c.created_at).toLocaleString('fr-FR');
+      const member = c.profiles ? c.profiles.full_name : "Inconnu";
+      const email = c.profiles ? c.profiles.email : "";
+      const drink = c.drinks ? c.drinks.name : "Inconnu";
+      const qty = c.quantity || 1;
+      const price = c.price_at_time || 0;
+      const total = (qty * price).toFixed(2);
+      const paid = c.is_paid ? "Oui" : "Non";
+      
+      csvContent += `"${date}";"${member}";"${email}";"${drink}";${qty};${price};${total};"${paid}"\n`;
+    });
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `export_stocks_consommations_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+  } catch (err) {
+    alert("Erreur lors de l'export : " + err.message);
+  } finally {
+    hide('loading');
+  }
+});async function clearMemberBalance(memberId) {
   if (!confirm("Marquer TOUTE l'ardoise comme payée pour ce membre ?")) return;
 
   show('loading');
@@ -1868,6 +1947,7 @@ document.getElementById('add-drink-btn').addEventListener('click', () => {
   document.getElementById('drink-name').value = '';
   document.getElementById('drink-price').value = '';
   document.getElementById('drink-icon').value = 'cup-soda';
+  document.getElementById('drink-alert-threshold').value = '0';
   document.getElementById('drink-image-url').value = '';
   document.getElementById('drink-image-file').value = '';
   show('drink-modal');
@@ -1881,6 +1961,7 @@ function editDrink(id) {
   document.getElementById('drink-modal-title').textContent = "Modifier la boisson";
   document.getElementById('drink-name').value = drink.name;
   document.getElementById('drink-price').value = drink.price;
+  document.getElementById('drink-alert-threshold').value = drink.alert_threshold || 0;
   document.getElementById('drink-icon').value = drink.icon || 'cup-soda';
   document.getElementById('drink-image-url').value = drink.image_url || '';
   document.getElementById('drink-image-file').value = '';
@@ -1904,7 +1985,8 @@ document.getElementById('save-drink-btn').addEventListener('click', async () => 
       if (uploadedUrl) image_url = uploadedUrl;
     }
 
-    const drinkData = { name, price: parseFloat(price), icon, image_url };
+    const alert_threshold = document.getElementById('drink-alert-threshold').value;
+    const drinkData = { name, price: parseFloat(price), icon, image_url, alert_threshold: parseInt(alert_threshold) || 0 };
 
     let res;
     if (editingDrinkId) {
