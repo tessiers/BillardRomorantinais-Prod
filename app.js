@@ -1075,6 +1075,22 @@ document.getElementById('save-stock-btn')?.addEventListener('click', async () =>
 
   toggleLoading(true);
   const { error } = await supabaseClient.from('drinks').update({ stock: newStock }).eq('id', drinkId);
+  
+  if (!error && currentUser) {
+    try {
+      await supabaseClient.from('stock_movements').insert({
+        drink_id: drinkId,
+        user_id: currentUser.id,
+        action_type: actionType,
+        quantity_changed: inputValue,
+        previous_stock: actionType === 'add' ? (drink.stock || 0) : null,
+        new_stock: newStock
+      });
+    } catch(err) {
+      console.warn("Erreur insertion historique de stock:", err);
+    }
+  }
+
   toggleLoading(false);
 
   if (error) {
@@ -1770,9 +1786,11 @@ document.getElementById('export-stock-csv-btn')?.addEventListener('click', async
   try {
     const { data: consData, error: consErr } = await supabaseClient.from('consumptions').select('*, profiles(full_name, email), drinks(name)').order('created_at', { ascending: false });
     const { data: drinksData, error: drinksErr } = await supabaseClient.from('drinks').select('*');
+    const { data: movementsData, error: movErr } = await supabaseClient.from('stock_movements').select('*, profiles(full_name), drinks(name)').order('created_at', { ascending: false });
 
     if (consErr) throw consErr;
     if (drinksErr) throw drinksErr;
+    if (movErr) console.warn("Erreur chargement historiques stocks (table peut-être manquante)", movErr);
 
     let csvContent = "data:text/csv;charset=utf-8,\uFEFF"; // BOM for Excel
 
@@ -1782,6 +1800,22 @@ document.getElementById('export-stock-csv-btn')?.addEventListener('click', async
     drinksData.forEach(d => {
       csvContent += `"${d.name}";${d.stock || 0};${d.alert_threshold || 0}\n`;
     });
+
+    csvContent += "\n--- HISTORIQUE DES AJOUTS DE STOCK ---\n";
+    csvContent += "Date;Membre;Boisson;Action;Quantité Modifiée;Nouveau Stock\n";
+    
+    if (movementsData) {
+      movementsData.forEach(m => {
+        const date = new Date(m.created_at).toLocaleString('fr-FR');
+        const member = m.profiles ? m.profiles.full_name : "Inconnu";
+        const drink = m.drinks ? m.drinks.name : "Inconnu";
+        const action = m.action_type === 'add' ? 'Ajout' : 'Inventaire';
+        const qty = m.quantity_changed || 0;
+        const new_stock = m.new_stock || 0;
+        
+        csvContent += `"${date}";"${member}";"${drink}";"${action}";${qty};${new_stock}\n`;
+      });
+    }
 
     csvContent += "\n--- HISTORIQUE DES CONSOMMATIONS ---\n";
     csvContent += "Date;Membre;Email;Boisson;Quantité;Prix Unitaire;Total;Payé\n";
