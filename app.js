@@ -510,12 +510,12 @@ function initNavigation() {
               adminEmails = managers.map(m => m.email).filter(Boolean).join(',');
             }
 
-            emailjs.send("VOTRE_SERVICE_ID", "VOTRE_TEMPLATE_ID", {
+            emailjs.send("service_j1zneme", "template_08br43s", {
               article_nom: drink.name,
               alert_list: alertList || "Aucune autre alerte",
               global_stock: globalStock,
               admin_emails: adminEmails || "billardclubromo41@gmail.com" // Par défaut si aucun trouvé
-            }).then(() => {
+            }, "eMrX8i7i3dlg3WN20").then(() => {
               console.log("Email d'alerte envoyé pour " + drink.name);
             }).catch(err => {
               console.error("Erreur envoi EmailJS :", err);
