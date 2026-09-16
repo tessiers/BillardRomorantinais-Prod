@@ -489,25 +489,38 @@ function initNavigation() {
               const currentInList = allDrinks.find(d => d.id === id);
               if (currentInList) currentInList.stock = newStock;
               
-              // Trier par ordre alphabétique pour que ce soit propre
+              // Trier par ordre alphabétique pour l'état global
               allDrinks.sort((a, b) => a.name.localeCompare(b.name));
+              
+              let alertsAtThreshold = [];
+              let alertsBelowThreshold = [];
 
               allDrinks.forEach(d => {
                 const stock = d.stock || 0;
                 const threshold = d.alert_threshold || 0;
                 
-                // On s'assure que le nom prenne toujours un espace fixe (ex: 20 caractères) pour aligner les chiffres
                 const nomBoisson = d.name.padEnd(25, ' ');
+                const icon = (stock <= threshold) ? '🚨' : '✅';
                 
                 // Ligne pour l'état global
-                globalStock += `👉 ${nomBoisson} : ${stock}\n`;
+                globalStock += `${icon} ${nomBoisson} : ${stock}\n`;
                 
-                // Ligne pour les alertes
+                // Catégorisation pour les alertes
                 if (stock <= threshold) {
                   hasAlerts = true;
-                  alertList += `🚨 ${nomBoisson} : ${stock} (Seuil: ${threshold})\n`;
+                  const line = `🚨 ${nomBoisson} : ${stock} (Seuil: ${threshold})\n`;
+                  if (stock === threshold) {
+                    alertsAtThreshold.push(line);
+                  } else {
+                    alertsBelowThreshold.push({ stock, line });
+                  }
                 }
               });
+              
+              // Trier ceux en dessous du seuil par ordre croissant de stock
+              alertsBelowThreshold.sort((a, b) => a.stock - b.stock);
+              
+              alertList = alertsAtThreshold.join('') + alertsBelowThreshold.map(a => a.line).join('');
             }
             
             if (!hasAlerts) alertList = "Aucune autre boisson en alerte.\n";
