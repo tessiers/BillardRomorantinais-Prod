@@ -481,23 +481,59 @@ function initNavigation() {
           if (typeof emailjs !== 'undefined') {
             // Fetch global stock to include in the email
             const { data: allDrinks } = await supabaseClient.from('drinks').select('*');
-            let alertList = "";
-            let globalStock = "";
+            let alertList = `
+              <table style="width:100%; border-collapse: collapse; font-family: Arial, sans-serif; margin-bottom: 20px;">
+                <tr style="background-color: #fee2e2; color: #991b1b; text-align: left;">
+                  <th style="padding: 8px; border: 1px solid #fca5a5;">Boisson</th>
+                  <th style="padding: 8px; border: 1px solid #fca5a5;">Stock Restant</th>
+                  <th style="padding: 8px; border: 1px solid #fca5a5;">Seuil</th>
+                </tr>
+            `;
+            let globalStock = `
+              <table style="width:100%; border-collapse: collapse; font-family: Arial, sans-serif;">
+                <tr style="background-color: #f3f4f6; text-align: left;">
+                  <th style="padding: 8px; border: 1px solid #e5e7eb;">Boisson</th>
+                  <th style="padding: 8px; border: 1px solid #e5e7eb;">Stock Restant</th>
+                </tr>
+            `;
             
+            let hasAlerts = false;
             if (allDrinks) {
               const currentInList = allDrinks.find(d => d.id === id);
               if (currentInList) currentInList.stock = newStock;
               
+              // Trier par ordre alphabétique pour que ce soit propre
+              allDrinks.sort((a, b) => a.name.localeCompare(b.name));
+
               allDrinks.forEach(d => {
                 const stock = d.stock || 0;
                 const threshold = d.alert_threshold || 0;
-                globalStock += `${d.name} : ${stock}\n`;
                 
+                // Ligne pour l'état global
+                globalStock += `
+                  <tr>
+                    <td style="padding: 8px; border: 1px solid #e5e7eb;">${d.name}</td>
+                    <td style="padding: 8px; border: 1px solid #e5e7eb; font-weight: bold; color: ${stock <= 0 ? '#dc2626' : (stock <= threshold ? '#d97706' : '#166534')}">${stock}</td>
+                  </tr>
+                `;
+                
+                // Ligne pour les alertes
                 if (stock <= threshold) {
-                  alertList += `- ${d.name} (Stock: ${stock}, Seuil: ${threshold})\n`;
+                  hasAlerts = true;
+                  alertList += `
+                    <tr>
+                      <td style="padding: 8px; border: 1px solid #fca5a5;">${d.name}</td>
+                      <td style="padding: 8px; border: 1px solid #fca5a5; font-weight: bold; color: #dc2626;">${stock}</td>
+                      <td style="padding: 8px; border: 1px solid #fca5a5; color: #6b7280;">${threshold}</td>
+                    </tr>
+                  `;
                 }
               });
             }
+            
+            alertList += `</table>`;
+            globalStock += `</table>`;
+            if (!hasAlerts) alertList = "<p>Aucune autre boisson en alerte.</p>";
             
             // Récupérer les emails des administrateurs et gestionnaires de stocks
             const { data: managers } = await supabaseClient
