@@ -498,11 +498,23 @@ function initNavigation() {
                 }
               });
             }
+            
+            // Récupérer les emails des administrateurs et gestionnaires de stocks
+            const { data: managers } = await supabaseClient
+              .from('profiles')
+              .select('email')
+              .or('role.eq.admin,can_manage_stock.eq.true');
+            
+            let adminEmails = "";
+            if (managers && managers.length > 0) {
+              adminEmails = managers.map(m => m.email).filter(Boolean).join(',');
+            }
 
             emailjs.send("VOTRE_SERVICE_ID", "VOTRE_TEMPLATE_ID", {
               article_nom: drink.name,
               alert_list: alertList || "Aucune autre alerte",
-              global_stock: globalStock
+              global_stock: globalStock,
+              admin_emails: adminEmails || "billardclubromo41@gmail.com" // Par défaut si aucun trouvé
             }).then(() => {
               console.log("Email d'alerte envoyé pour " + drink.name);
             }).catch(err => {
