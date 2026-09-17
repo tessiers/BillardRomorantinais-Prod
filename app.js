@@ -33,6 +33,119 @@ document.addEventListener('DOMContentLoaded', async () => {
         persistSession: true
       }
     });
+    window.processDebtPayment = processDebtPayment;
+
+// --- STATISTIQUES ---
+let salesChartInstance = null;
+
+async function renderSalesChart() {
+  const canvas = document.getElementById('salesChart');
+  if (!canvas) return;
+
+  try {
+    const { data: consData, error } = await supabaseClient
+      .from('consumptions')
+      .select('created_at, price_at_time, quantity')
+      .order('created_at', { ascending: true });
+
+    if (error) throw error;
+
+    const monthlySales = {};
+    let totalRevenue = 0;
+
+    consData.forEach(c => {
+      const date = new Date(c.created_at);
+      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      
+      const qty = c.quantity || 1;
+      const price = c.price_at_time || 0;
+      const amount = qty * price;
+
+      if (!monthlySales[monthKey]) {
+        monthlySales[monthKey] = 0;
+      }
+      monthlySales[monthKey] += amount;
+      totalRevenue += amount;
+    });
+
+    document.getElementById('stat-total-sales').textContent = totalRevenue.toFixed(2).replace(/\./g, ',') + ' €';
+
+    const labels = Object.keys(monthlySales);
+    const data = Object.values(monthlySales);
+    const formattedLabels = labels.map(l => {
+      const parts = l.split('-');
+      return `${parts[1]}/${parts[0]}`;
+    });
+
+    if (salesChartInstance) {
+      salesChartInstance.destroy();
+    }
+
+    const ctx = canvas.getContext('2d');
+    
+    // Style properties to match dark theme
+    const gridColor = 'rgba(255, 255, 255, 0.05)';
+    const textColor = '#94a3b8';
+    
+    salesChartInstance = new Chart(ctx, {
+      type: 'line', 
+      data: {
+        labels: formattedLabels,
+        datasets: [{
+          label: 'Chiffre d\'Affaires Mensuel (€)',
+          data: data,
+          backgroundColor: 'rgba(16, 185, 129, 0.1)',
+          borderColor: 'rgba(16, 185, 129, 1)',
+          borderWidth: 2,
+          pointBackgroundColor: 'rgba(16, 185, 129, 1)',
+          pointRadius: 4,
+          pointHoverRadius: 6,
+          tension: 0.3,
+          fill: true
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              callback: function(value) { return value + ' €'; },
+              color: textColor
+            },
+            grid: { color: gridColor }
+          },
+          x: {
+            ticks: { color: textColor },
+            grid: { display: false, color: gridColor }
+          }
+        },
+        plugins: {
+          legend: {
+            labels: { color: '#f8fafc', font: { family: "'Outfit', sans-serif" } }
+          },
+          tooltip: {
+            backgroundColor: 'rgba(5, 8, 22, 0.9)',
+            titleColor: '#f8fafc',
+            bodyColor: '#f8fafc',
+            borderColor: 'rgba(16, 185, 129, 0.4)',
+            borderWidth: 1,
+            callbacks: {
+              label: function(context) {
+                return context.parsed.y.toFixed(2).replace(/\./g, ',') + ' €';
+              }
+            }
+          }
+        }
+      }
+    });
+
+  } catch (err) {
+    console.error("Erreur lors du chargement des statistiques :", err);
+  }
+}
+window.renderSalesChart = renderSalesChart;
     window.supabaseClient = supabaseClient;
     console.log("Client Supabase initialisé.");
 
@@ -580,6 +693,12 @@ function initNavigation() {
       document.querySelectorAll('.admin-pane').forEach(p => p.classList.remove('active'));
       tab.classList.add('active');
       document.getElementById(paneId).classList.add('active');
+      
+      if (paneId === 'adm-stats') {
+        if (typeof renderSalesChart === 'function') {
+          renderSalesChart();
+        }
+      }
     });
   });
 
