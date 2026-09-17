@@ -155,7 +155,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       try {
         const { data: consData, error } = await supabaseClient
           .from('consumptions')
-          .select('created_at, item_name, quantity')
+          .select('created_at, quantity, drinks(name)')
           .order('created_at', { ascending: true });
 
         if (error) throw error;
@@ -168,7 +168,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           const date = new Date(c.created_at);
           const monthKey = `${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`;
           const qty = c.quantity || 1;
-          const itemName = c.item_name || 'Inconnu';
+          const itemName = (c.drinks && c.drinks.name) ? c.drinks.name : 'Inconnu';
           
           if (!monthlyItems[monthKey]) {
             monthlyItems[monthKey] = {};
