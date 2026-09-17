@@ -33,7 +33,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         persistSession: true
       }
     });
-    window.processDebtPayment = processDebtPayment;
+    window.supabaseClient = supabaseClient;
+    console.log("Client Supabase initialisé.");
 
 // --- STATISTIQUES ---
 let salesChartInstance = null;
