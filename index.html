@@ -1006,8 +1006,12 @@
               <h3><i data-lucide="bar-chart-2"></i> Évolution des Ventes</h3>
               <div class="stat-summary" style="display: flex; gap: 1rem;">
                 <div style="background: rgba(16, 185, 129, 0.1); padding: 8px 15px; border-radius: 8px; border: 1px solid rgba(16, 185, 129, 0.2);">
-                  <span style="font-size: 0.8rem; color: var(--text-muted); display: block;">Ventes totales</span>
+                  <span style="font-size: 0.8rem; color: var(--text-muted); display: block;">Chiffre d'Affaires</span>
                   <span id="stat-total-sales" style="font-size: 1.2rem; font-weight: bold; color: var(--accent-green);">0,00 €</span>
+                </div>
+                <div style="background: rgba(245, 158, 11, 0.1); padding: 8px 15px; border-radius: 8px; border: 1px solid rgba(245, 158, 11, 0.2);">
+                  <span style="font-size: 0.8rem; color: var(--text-muted); display: block;">Articles vendus</span>
+                  <span id="stat-total-qty" style="font-size: 1.2rem; font-weight: bold; color: var(--accent-orange);">0</span>
                 </div>
               </div>
             </div>
@@ -1419,7 +1423,7 @@
     src="https://connect.facebook.net/fr_FR/sdk.js#xfbml=1&version=v17.0"></script>
   <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
   <script src="tournaments.js?v=2.3.2" defer></script>
-  <script src="app.js?v=2.5.1" defer></script>
+  <script src="app.js?v=2.5.2" defer></script>
   <script>
     // Initialisation des icônes Lucide
     lucide.createIcons();

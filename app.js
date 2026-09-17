@@ -53,6 +53,7 @@ async function renderSalesChart() {
 
     const monthlySales = {};
     let totalRevenue = 0;
+    let totalQuantity = 0;
 
     consData.forEach(c => {
       const date = new Date(c.created_at);
@@ -63,16 +64,25 @@ async function renderSalesChart() {
       const amount = qty * price;
 
       if (!monthlySales[monthKey]) {
-        monthlySales[monthKey] = 0;
+        monthlySales[monthKey] = { revenue: 0, quantity: 0 };
       }
-      monthlySales[monthKey] += amount;
+      monthlySales[monthKey].revenue += amount;
+      monthlySales[monthKey].quantity += qty;
+      
       totalRevenue += amount;
+      totalQuantity += qty;
     });
 
     document.getElementById('stat-total-sales').textContent = totalRevenue.toFixed(2).replace(/\./g, ',') + ' €';
+    const qtyElement = document.getElementById('stat-total-qty');
+    if (qtyElement) {
+      qtyElement.textContent = totalQuantity;
+    }
 
     const labels = Object.keys(monthlySales);
-    const data = Object.values(monthlySales);
+    const revenueData = labels.map(k => monthlySales[k].revenue);
+    const qtyData = labels.map(k => monthlySales[k].quantity);
+    
     const formattedLabels = labels.map(l => {
       const parts = l.split('-');
       return `${parts[1]}/${parts[0]}`;
@@ -89,33 +99,59 @@ async function renderSalesChart() {
     const textColor = '#94a3b8';
     
     salesChartInstance = new Chart(ctx, {
-      type: 'line', 
       data: {
         labels: formattedLabels,
-        datasets: [{
-          label: 'Chiffre d\'Affaires Mensuel (€)',
-          data: data,
-          backgroundColor: 'rgba(16, 185, 129, 0.1)',
-          borderColor: 'rgba(16, 185, 129, 1)',
-          borderWidth: 2,
-          pointBackgroundColor: 'rgba(16, 185, 129, 1)',
-          pointRadius: 4,
-          pointHoverRadius: 6,
-          tension: 0.3,
-          fill: true
-        }]
+        datasets: [
+          {
+            type: 'line',
+            label: 'Chiffre d\'Affaires (€)',
+            data: revenueData,
+            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+            borderColor: 'rgba(16, 185, 129, 1)',
+            borderWidth: 2,
+            pointBackgroundColor: 'rgba(16, 185, 129, 1)',
+            pointRadius: 4,
+            pointHoverRadius: 6,
+            tension: 0.3,
+            fill: true,
+            yAxisID: 'y'
+          },
+          {
+            type: 'bar',
+            label: 'Quantité (Articles)',
+            data: qtyData,
+            backgroundColor: 'rgba(245, 158, 11, 0.5)',
+            borderColor: 'rgba(245, 158, 11, 1)',
+            borderWidth: 1,
+            borderRadius: 4,
+            yAxisID: 'y1'
+          }
+        ]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
         scales: {
           y: {
+            type: 'linear',
+            display: true,
+            position: 'left',
             beginAtZero: true,
             ticks: {
               callback: function(value) { return value + ' €'; },
               color: textColor
             },
             grid: { color: gridColor }
+          },
+          y1: {
+            type: 'linear',
+            display: true,
+            position: 'right',
+            beginAtZero: true,
+            ticks: {
+              color: textColor
+            },
+            grid: { drawOnChartArea: false },
           },
           x: {
             ticks: { color: textColor },
@@ -134,7 +170,11 @@ async function renderSalesChart() {
             borderWidth: 1,
             callbacks: {
               label: function(context) {
-                return context.parsed.y.toFixed(2).replace(/\./g, ',') + ' €';
+                if (context.datasetIndex === 0) {
+                  return 'CA : ' + context.parsed.y.toFixed(2).replace(/\./g, ',') + ' €';
+                } else {
+                  return 'Quantité : ' + context.parsed.y + ' articles';
+                }
               }
             }
           }
