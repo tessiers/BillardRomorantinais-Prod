@@ -38,6 +38,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // --- STATISTIQUES ---
 let salesChartInstance = null;
+let itemsChartInstance = null;
 
 async function renderSalesChart() {
   const canvas = document.getElementById('salesChart');
@@ -46,7 +47,7 @@ async function renderSalesChart() {
   try {
     const { data: consData, error } = await supabaseClient
       .from('consumptions')
-      .select('created_at, price_at_time, quantity')
+      .select('created_at, price_at_time, quantity, drinks(name)')
       .order('created_at', { ascending: true });
 
     if (error) throw error;
@@ -54,6 +55,11 @@ async function renderSalesChart() {
     const monthlySales = {};
     let totalRevenue = 0;
     let totalQuantity = 0;
+    
+    // For Top items (30 last days)
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const topItems = {};
 
     consData.forEach(c => {
       const date = new Date(c.created_at);
@@ -62,7 +68,10 @@ async function renderSalesChart() {
       const qty = c.quantity || 1;
       const price = c.price_at_time || 0;
       const amount = qty * price;
+      
+      const drinkName = (c.drinks && c.drinks.name) ? c.drinks.name : "Inconnu / Supprimé";
 
+      // Aggregation evolution globale
       if (!monthlySales[monthKey]) {
         monthlySales[monthKey] = { revenue: 0, quantity: 0 };
       }
@@ -71,6 +80,14 @@ async function renderSalesChart() {
       
       totalRevenue += amount;
       totalQuantity += qty;
+      
+      // Aggregation top items (30 days)
+      if (date >= thirtyDaysAgo) {
+        if (!topItems[drinkName]) {
+          topItems[drinkName] = 0;
+        }
+        topItems[drinkName] += qty;
+      }
     });
 
     document.getElementById('stat-total-sales').textContent = totalRevenue.toFixed(2).replace(/\./g, ',') + ' €';
@@ -182,9 +199,85 @@ async function renderSalesChart() {
       }
     });
 
+    // Rendu Top Items
+    renderItemsChart(topItems);
+
   } catch (err) {
     console.error("Erreur lors du chargement des statistiques :", err);
   }
+}
+
+function renderItemsChart(topItemsData) {
+  const canvas = document.getElementById('itemsChart');
+  const tableBody = document.getElementById('top-items-list');
+  if (!canvas || !tableBody) return;
+
+  // Tri décroissant
+  const sortedItems = Object.entries(topItemsData)
+    .sort((a, b) => b[1] - a[1]);
+
+  const labels = sortedItems.map(item => item[0]);
+  const data = sortedItems.map(item => item[1]);
+
+  // Remplir tableau
+  tableBody.innerHTML = '';
+  if (sortedItems.length === 0) {
+    tableBody.innerHTML = '<tr><td colspan="2" style="text-align:center; color:var(--text-muted);">Aucune vente ces 30 derniers jours</td></tr>';
+  } else {
+    sortedItems.forEach(item => {
+      tableBody.innerHTML += `<tr>
+        <td>${item[0]}</td>
+        <td style="text-align: right; font-weight: bold; color: var(--accent-orange);">${item[1]}</td>
+      </tr>`;
+    });
+  }
+
+  // Couleurs Doughnut
+  const colors = [
+    '#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6',
+    '#ec4899', '#06b6d4', '#eab308', '#6366f1', '#14b8a6',
+    '#f97316', '#64748b'
+  ];
+
+  if (itemsChartInstance) {
+    itemsChartInstance.destroy();
+  }
+
+  const ctx = canvas.getContext('2d');
+  itemsChartInstance = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: labels,
+      datasets: [{
+        data: data,
+        backgroundColor: colors.slice(0, labels.length).map(c => c + 'CC'),
+        borderColor: colors.slice(0, labels.length),
+        borderWidth: 1,
+        hoverOffset: 10
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '65%',
+      plugins: {
+        legend: {
+          position: 'right',
+          labels: { color: '#f8fafc', font: { family: "'Outfit', sans-serif" } }
+        },
+        tooltip: {
+          backgroundColor: 'rgba(5, 8, 22, 0.9)',
+          titleColor: '#f8fafc',
+          bodyColor: '#f8fafc',
+          callbacks: {
+            label: function(context) {
+              return ' ' + context.parsed + ' vendus';
+            }
+          }
+        }
+      }
+    }
+  });
 }
 window.renderSalesChart = renderSalesChart;
     window.supabaseClient = supabaseClient;
