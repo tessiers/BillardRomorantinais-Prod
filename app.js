@@ -216,50 +216,37 @@ function renderItemsChart(topItemsData) {
   const sortedItems = Object.entries(topItemsData)
     .sort((a, b) => b[1] - a[1]);
 
-  const labels = sortedItems.map(item => item[0]);
-  const data = sortedItems.map(item => item[1]);
+  const itemLabels = sortedItems.map(item => item[0]);
+  const itemData = sortedItems.map(item => item[1]);
 
-  // Remplir tableau
-  tableBody.innerHTML = '';
-  if (sortedItems.length === 0) {
-    tableBody.innerHTML = '<tr><td colspan="2" style="text-align:center; color:var(--text-muted);">Aucune vente ces 30 derniers jours</td></tr>';
-  } else {
-    sortedItems.forEach(item => {
-      tableBody.innerHTML += `<tr>
-        <td style="padding-left: 1.5rem; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">${item[0]}</td>
-        <td style="text-align: right; font-weight: bold; color: var(--accent-orange); padding-right: 1.5rem;">${item[1]}</td>
-      </tr>`;
-    });
-  }
-
-  // Couleurs Doughnut
-  const colors = [
-    '#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6',
-    '#ec4899', '#06b6d4', '#eab308', '#6366f1', '#14b8a6',
-    '#f97316', '#64748b'
-  ];
-
+  // Mettre à jour le graphique (on garde seulement le graphique)
   if (itemsChartInstance) {
     itemsChartInstance.destroy();
   }
-
-  const ctx = canvas.getContext('2d');
-  itemsChartInstance = new Chart(ctx, {
+  
+  const ctxItems = document.getElementById('itemsChart').getContext('2d');
+  itemsChartInstance = new Chart(ctxItems, {
     type: 'doughnut',
     data: {
-      labels: labels,
+      labels: itemLabels,
       datasets: [{
-        data: data,
-        backgroundColor: colors.slice(0, labels.length).map(c => c + 'CC'),
-        borderColor: colors.slice(0, labels.length),
-        borderWidth: 1,
-        hoverOffset: 10
+        data: itemData,
+        backgroundColor: [
+          '#3b82f6', // bleu
+          '#ef4444', // rouge
+          '#10b981', // vert
+          '#f59e0b', // jaune
+          '#8b5cf6', // violet
+          '#ec4899', // rose
+          '#14b8a6', // teal
+          '#f97316'  // orange
+        ],
+        borderWidth: 0
       }]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      cutout: '50%',
       plugins: {
         legend: {
           position: 'bottom',
@@ -271,11 +258,14 @@ function renderItemsChart(topItemsData) {
         },
         tooltip: {
           backgroundColor: 'rgba(5, 8, 22, 0.9)',
-          titleColor: '#f8fafc',
-          bodyColor: '#f8fafc',
+          titleFont: { family: "'Outfit', sans-serif", size: 13 },
+          bodyFont: { family: "'Outfit', sans-serif", size: 12 },
+          padding: 12,
+          borderColor: 'rgba(255, 255, 255, 0.1)',
+          borderWidth: 1,
           callbacks: {
             label: function(context) {
-              return ' ' + context.parsed + ' vendus';
+              return ' ' + context.label + ' : ' + context.parsed + ' unités';
             }
           }
         }
