@@ -644,18 +644,15 @@
         if (consErr) throw consErr;
         if (drinksErr) throw drinksErr;
 
-        let csvContent = "data:text/csv;charset=utf-8,\uFEFF"; // BOM for Excel
-
         // 1. Stock Actuel
-        csvContent += "--- ÉTAT DES STOCKS ---\n";
-        csvContent += "Boisson;Stock Actuel;Seuil Alerte\n";
+        const stocksDataArray = [["Boisson", "Stock Actuel", "Seuil Alerte"]];
         drinksData.forEach(d => {
-          csvContent += `"${d.name}";${d.stock || 0};${d.alert_threshold || 0}\n`;
+          stocksDataArray.push([d.name, d.stock || 0, d.alert_threshold || 0]);
         });
+        const ws_stocks = XLSX.utils.aoa_to_sheet(stocksDataArray);
 
-        csvContent += "\n--- HISTORIQUE DES CONSOMMATIONS ---\n";
-        csvContent += "Date;Membre;Email;Boisson;Quantité;Prix Unitaire;Total;Payé\n";
-        
+        // 2. Historique Consommations
+        const consDataArray = [["Date", "Membre", "Email", "Boisson", "Quantité", "Prix Unitaire", "Total", "Payé"]];
         consData.forEach(c => {
           const date = new Date(c.created_at).toLocaleString('fr-FR');
           const member = c.profiles ? c.profiles.full_name : "Inconnu";
@@ -663,24 +660,17 @@
           const drink = c.drinks ? c.drinks.name : "Inconnu";
           const qty = c.quantity || 1;
           const price = c.price_at_time || 0;
-          const total = (qty * price).toFixed(2);
+          const total = qty * price;
           const paid = c.is_paid ? "Oui" : "Non";
-          
-          const priceStr = price.toFixed(2).replace(/\./g, ',');
-          const totalStr = total.replace(/\./g, ',');
-          
-          csvContent += `"${date}";"${member}";"${email}";"${drink}";${qty};${priceStr};${totalStr};"${paid}"\n`;
+          consDataArray.push([date, member, email, drink, qty, price, total, paid]);
         });
+        const ws_cons = XLSX.utils.aoa_to_sheet(consDataArray);
 
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.setAttribute("href", url);
-        link.setAttribute("download", `export_stocks_consommations_${new Date().toISOString().split('T')[0]}.csv`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws_stocks, "État des Stocks");
+        XLSX.utils.book_append_sheet(wb, ws_cons, "Consommations");
+
+        XLSX.writeFile(wb, `export_stocks_consommations_${new Date().toISOString().split('T')[0]}.xlsx`);
         
       } catch (err) {
         alert("Erreur lors de l'export : " + err.message);
