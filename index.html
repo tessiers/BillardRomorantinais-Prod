@@ -1005,28 +1005,26 @@
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
               <h3><i data-lucide="bar-chart-2"></i> Évolution des Ventes</h3>
               <div class="stat-summary" style="display: flex; gap: 1rem;">
-                <div style="background: rgba(16, 185, 129, 0.1); padding: 8px 15px; border-radius: 8px; border: 1px solid rgba(16, 185, 129, 0.2);">
-                  <span style="font-size: 0.8rem; color: var(--text-muted); display: block;">Chiffre d'Affaires</span>
-                  <span id="stat-total-sales" style="font-size: 1.2rem; font-weight: bold; color: var(--accent-green);">0,00 €</span>
-                </div>
-                <div style="background: rgba(245, 158, 11, 0.1); padding: 8px 15px; border-radius: 8px; border: 1px solid rgba(245, 158, 11, 0.2);">
-                  <span style="font-size: 0.8rem; color: var(--text-muted); display: block;">Articles vendus</span>
-                  <span id="stat-total-qty" style="font-size: 1.2rem; font-weight: bold; color: var(--accent-orange);">0</span>
+                <div
+                  style="background: rgba(16, 185, 129, 0.1); padding: 8px 15px; border-radius: 8px; border: 1px solid rgba(16, 185, 129, 0.2);">
+                  <span style="font-size: 0.8rem; color: var(--text-muted); display: block;">Ventes totales</span>
+                  <span id="stat-total-sales"
+                    style="font-size: 1.2rem; font-weight: bold; color: var(--accent-green);">0,00 €</span>
                 </div>
               </div>
             </div>
-            
-            <div class="chart-container" style="position: relative; height: 40vh; width: 100%; margin-bottom: 2rem;">
+
+            <div class="chart-container" style="position: relative; height: 40vh; width: 100%;">
               <canvas id="salesChart"></canvas>
             </div>
-
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-top: 1px solid var(--border); padding-top: 1.5rem;">
-              <h3><i data-lucide="pie-chart"></i> Top Ventes (30 derniers jours)</h3>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; margin-top: 2rem;">
+              <h3><i data-lucide="bar-chart-2"></i> Consommation Mensuelle par Article</h3>
             </div>
             
             <div style="display: flex; flex-wrap: wrap; gap: 1.5rem; align-items: flex-start;">
-              <div class="chart-container" style="position: relative; height: 35vh; flex: 1 1 100%; min-width: 300px; display: flex; justify-content: center;">
-                <canvas id="itemsChart"></canvas>
+              <div class="chart-container" style="position: relative; height: 40vh; width: 100%; min-width: 300px; display: flex; justify-content: center;">
+                <canvas id="itemsMonthlyChart"></canvas>
               </div>
             </div>
           </div>
@@ -1058,7 +1056,8 @@
             </div>
             <div style="display: flex; gap: 8px; align-items: center; margin-top: 1rem;">
               <input type="checkbox" id="manual-mem-can-manage-stock" style="width: auto;">
-              <label for="manual-mem-can-manage-stock" style="font-weight: 600; cursor: pointer; margin: 0;">Droit de Gestionnaire de stocks</label>
+              <label for="manual-mem-can-manage-stock" style="font-weight: 600; cursor: pointer; margin: 0;">Droit de
+                Gestionnaire de stocks</label>
             </div>
             <div class="input-group" style="margin-top: 1rem;">
               <label>Photo de profil (Facultatif)</label>
@@ -1155,11 +1154,15 @@
         <div id="stock-modal" class="modal hidden">
           <div class="modal-content card" style="max-width: 400px; width: 100%; border: 1px solid var(--border);">
             <h3 id="stock-modal-title">Gérer le stock</h3>
-            <p id="stock-drink-name" style="font-weight: bold; margin-bottom: 1rem; color: var(--accent-green);">Boisson</p>
-            
-            <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">
-               <button type="button" class="btn-tab active" id="tab-add-stock" style="padding: 0.5rem; font-size: 0.9rem;">Réapprovisionner</button>
-               <button type="button" class="btn-tab" id="tab-set-stock" style="padding: 0.5rem; font-size: 0.9rem;">Inventaire</button>
+            <p id="stock-drink-name" style="font-weight: bold; margin-bottom: 1rem; color: var(--accent-green);">Boisson
+            </p>
+
+            <div
+              style="display: flex; gap: 1rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">
+              <button type="button" class="btn-tab active" id="tab-add-stock"
+                style="padding: 0.5rem; font-size: 0.9rem;">Réapprovisionner</button>
+              <button type="button" class="btn-tab" id="tab-set-stock"
+                style="padding: 0.5rem; font-size: 0.9rem;">Inventaire</button>
             </div>
 
             <div class="input-group">
@@ -1171,8 +1174,10 @@
             <input type="hidden" id="stock-action-type" value="add">
 
             <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1.5rem;">
-              <button class="btn-alt" onclick="document.getElementById('stock-modal').classList.add('hidden')">Annuler</button>
-              <button class="btn-main" id="save-stock-btn" style="border:none; padding: 8px 16px; border-radius:8px;">Valider</button>
+              <button class="btn-alt"
+                onclick="document.getElementById('stock-modal').classList.add('hidden')">Annuler</button>
+              <button class="btn-main" id="save-stock-btn"
+                style="border:none; padding: 8px 16px; border-radius:8px;">Valider</button>
             </div>
           </div>
         </div>
@@ -1433,7 +1438,7 @@
     src="https://connect.facebook.net/fr_FR/sdk.js#xfbml=1&version=v17.0"></script>
   <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
   <script src="tournaments.js?v=2.3.2" defer></script>
-  <script src="app.js?v=2.7.0" defer></script>
+  <script src="app.js?v=2.8.0" defer></script>
   <script>
     // Initialisation des icônes Lucide
     lucide.createIcons();

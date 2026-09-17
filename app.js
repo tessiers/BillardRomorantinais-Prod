@@ -36,244 +36,227 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.supabaseClient = supabaseClient;
     console.log("Client Supabase initialisé.");
 
-// --- STATISTIQUES ---
-let salesChartInstance = null;
-let itemsChartInstance = null;
+    // --- STATISTIQUES ---
+    let salesChartInstance = null;
 
-async function renderSalesChart() {
-  const canvas = document.getElementById('salesChart');
-  if (!canvas) return;
+    async function renderSalesChart() {
+      const canvas = document.getElementById('salesChart');
+      if (!canvas) return;
 
-  try {
-    const { data: consData, error } = await supabaseClient
-      .from('consumptions')
-      .select('created_at, price_at_time, quantity, drinks(name)')
-      .order('created_at', { ascending: true });
+      try {
+        const { data: consData, error } = await supabaseClient
+          .from('consumptions')
+          .select('created_at, price_at_time, quantity')
+          .order('created_at', { ascending: true });
 
-    if (error) throw error;
+        if (error) throw error;
 
-    const monthlySales = {};
-    let totalRevenue = 0;
-    let totalQuantity = 0;
-    
-    // For Top items (30 last days)
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    const topItems = {};
+        const monthlySales = {};
+        let totalRevenue = 0;
 
-    consData.forEach(c => {
-      const date = new Date(c.created_at);
-      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-      
-      const qty = c.quantity || 1;
-      const price = c.price_at_time || 0;
-      const amount = qty * price;
-      
-      const drinkName = (c.drinks && c.drinks.name) ? c.drinks.name : "Inconnu / Supprimé";
+        consData.forEach(c => {
+          const date = new Date(c.created_at);
+          const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
 
-      // Aggregation evolution globale
-      if (!monthlySales[monthKey]) {
-        monthlySales[monthKey] = { revenue: 0, quantity: 0 };
-      }
-      monthlySales[monthKey].revenue += amount;
-      monthlySales[monthKey].quantity += qty;
-      
-      totalRevenue += amount;
-      totalQuantity += qty;
-      
-      // Aggregation top items (30 days)
-      if (date >= thirtyDaysAgo) {
-        if (!topItems[drinkName]) {
-          topItems[drinkName] = 0;
+          const qty = c.quantity || 1;
+          const price = c.price_at_time || 0;
+          const amount = qty * price;
+
+          if (!monthlySales[monthKey]) {
+            monthlySales[monthKey] = 0;
+          }
+          monthlySales[monthKey] += amount;
+          totalRevenue += amount;
+        });
+
+        document.getElementById('stat-total-sales').textContent = totalRevenue.toFixed(2).replace(/\./g, ',') + ' €';
+
+        const labels = Object.keys(monthlySales);
+        const data = Object.values(monthlySales);
+        const formattedLabels = labels.map(l => {
+          const parts = l.split('-');
+          return `${parts[1]}/${parts[0]}`;
+        });
+
+        if (salesChartInstance) {
+          salesChartInstance.destroy();
         }
-        topItems[drinkName] += qty;
-      }
-    });
 
-    document.getElementById('stat-total-sales').textContent = totalRevenue.toFixed(2).replace(/\./g, ',') + ' €';
-    const qtyElement = document.getElementById('stat-total-qty');
-    if (qtyElement) {
-      qtyElement.textContent = totalQuantity;
-    }
+        const ctx = canvas.getContext('2d');
 
-    const labels = Object.keys(monthlySales);
-    const revenueData = labels.map(k => monthlySales[k].revenue);
-    const qtyData = labels.map(k => monthlySales[k].quantity);
-    
-    const formattedLabels = labels.map(l => {
-      const parts = l.split('-');
-      return `${parts[1]}/${parts[0]}`;
-    });
+        // Style properties to match dark theme
+        const gridColor = 'rgba(255, 255, 255, 0.05)';
+        const textColor = '#94a3b8';
 
-    if (salesChartInstance) {
-      salesChartInstance.destroy();
-    }
-
-    const ctx = canvas.getContext('2d');
-    
-    // Style properties to match dark theme
-    const gridColor = 'rgba(255, 255, 255, 0.05)';
-    const textColor = '#94a3b8';
-    
-    salesChartInstance = new Chart(ctx, {
-      data: {
-        labels: formattedLabels,
-        datasets: [
-          {
-            type: 'line',
-            label: 'Chiffre d\'Affaires (€)',
-            data: revenueData,
-            backgroundColor: 'rgba(16, 185, 129, 0.1)',
-            borderColor: 'rgba(16, 185, 129, 1)',
-            borderWidth: 2,
-            pointBackgroundColor: 'rgba(16, 185, 129, 1)',
-            pointRadius: 4,
-            pointHoverRadius: 6,
-            tension: 0.3,
-            fill: true,
-            yAxisID: 'y'
+        salesChartInstance = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: formattedLabels,
+            datasets: [{
+              label: 'Chiffre d\'Affaires Mensuel (€)',
+              data: data,
+              backgroundColor: 'rgba(16, 185, 129, 0.1)',
+              borderColor: 'rgba(16, 185, 129, 1)',
+              borderWidth: 2,
+              pointBackgroundColor: 'rgba(16, 185, 129, 1)',
+              pointRadius: 4,
+              pointHoverRadius: 6,
+              tension: 0.3,
+              fill: true
+            }]
           },
-          {
-            type: 'bar',
-            label: 'Quantité (Articles)',
-            data: qtyData,
-            backgroundColor: 'rgba(245, 158, 11, 0.5)',
-            borderColor: 'rgba(245, 158, 11, 1)',
-            borderWidth: 1,
-            borderRadius: 4,
-            yAxisID: 'y1'
-          }
-        ]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-          y: {
-            type: 'linear',
-            display: true,
-            position: 'left',
-            beginAtZero: true,
-            ticks: {
-              callback: function(value) { return value + ' €'; },
-              color: textColor
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: {
+                  callback: function (value) { return value + ' €'; },
+                  color: textColor
+                },
+                grid: { color: gridColor }
+              },
+              x: {
+                ticks: { color: textColor },
+                grid: { display: false, color: gridColor }
+              }
             },
-            grid: { color: gridColor }
-          },
-          y1: {
-            type: 'linear',
-            display: true,
-            position: 'right',
-            beginAtZero: true,
-            ticks: {
-              color: textColor
-            },
-            grid: { drawOnChartArea: false },
-          },
-          x: {
-            ticks: { color: textColor },
-            grid: { display: false, color: gridColor }
-          }
-        },
-        plugins: {
-          legend: {
-            labels: { color: '#f8fafc', font: { family: "'Outfit', sans-serif" } }
-          },
-          tooltip: {
-            backgroundColor: 'rgba(5, 8, 22, 0.9)',
-            titleColor: '#f8fafc',
-            bodyColor: '#f8fafc',
-            borderColor: 'rgba(16, 185, 129, 0.4)',
-            borderWidth: 1,
-            callbacks: {
-              label: function(context) {
-                if (context.datasetIndex === 0) {
-                  return 'CA : ' + context.parsed.y.toFixed(2).replace(/\./g, ',') + ' €';
-                } else {
-                  return 'Quantité : ' + context.parsed.y + ' articles';
+            plugins: {
+              legend: {
+                labels: { color: '#f8fafc', font: { family: "'Outfit', sans-serif" } }
+              },
+              tooltip: {
+                backgroundColor: 'rgba(5, 8, 22, 0.9)',
+                titleColor: '#f8fafc',
+                bodyColor: '#f8fafc',
+                borderColor: 'rgba(16, 185, 129, 0.4)',
+                borderWidth: 1,
+                callbacks: {
+                  label: function (context) {
+                    return context.parsed.y.toFixed(2).replace(/\./g, ',') + ' €';
+                  }
                 }
               }
             }
           }
-        }
-      }
-    });
+        });
 
-    // Rendu Top Items
-    renderItemsChart(topItems);
-
-  } catch (err) {
-    console.error("Erreur lors du chargement des statistiques :", err);
-  }
-}
-
-function renderItemsChart(topItemsData) {
-  const canvas = document.getElementById('itemsChart');
-  const tableBody = document.getElementById('top-items-list');
-  if (!canvas || !tableBody) return;
-
-  // Tri décroissant
-  const sortedItems = Object.entries(topItemsData)
-    .sort((a, b) => b[1] - a[1]);
-
-  const itemLabels = sortedItems.map(item => item[0]);
-  const itemData = sortedItems.map(item => item[1]);
-
-  // Mettre à jour le graphique (on garde seulement le graphique)
-  if (itemsChartInstance) {
-    itemsChartInstance.destroy();
-  }
-  
-  const ctxItems = document.getElementById('itemsChart').getContext('2d');
-  itemsChartInstance = new Chart(ctxItems, {
-    type: 'doughnut',
-    data: {
-      labels: itemLabels,
-      datasets: [{
-        data: itemData,
-        backgroundColor: [
-          '#3b82f6', // bleu
-          '#ef4444', // rouge
-          '#10b981', // vert
-          '#f59e0b', // jaune
-          '#8b5cf6', // violet
-          '#ec4899', // rose
-          '#14b8a6', // teal
-          '#f97316'  // orange
-        ],
-        borderWidth: 0
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          position: 'bottom',
-          labels: { 
-            color: '#f8fafc', 
-            font: { family: "'Outfit', sans-serif", size: 11 },
-            boxWidth: 12
-          }
-        },
-        tooltip: {
-          backgroundColor: 'rgba(5, 8, 22, 0.9)',
-          titleFont: { family: "'Outfit', sans-serif", size: 13 },
-          bodyFont: { family: "'Outfit', sans-serif", size: 12 },
-          padding: 12,
-          borderColor: 'rgba(255, 255, 255, 0.1)',
-          borderWidth: 1,
-          callbacks: {
-            label: function(context) {
-              return ' ' + context.label + ' : ' + context.parsed + ' unités';
-            }
-          }
-        }
+      } catch (err) {
+        console.error("Erreur lors du chargement des statistiques :", err);
       }
     }
-  });
-}
-window.renderSalesChart = renderSalesChart;
+    window.renderSalesChart = renderSalesChart;
+
+    async function renderItemsMonthlyChart() {
+      const canvas = document.getElementById('itemsMonthlyChart');
+      if (!canvas) return;
+
+      try {
+        const { data: consData, error } = await supabaseClient
+          .from('consumptions')
+          .select('created_at, item_name, quantity')
+          .order('created_at', { ascending: true });
+
+        if (error) throw error;
+
+        // Group by month and item_name
+        const monthlyItems = {};
+        const allItems = new Set();
+        
+        consData.forEach(c => {
+          const date = new Date(c.created_at);
+          const monthKey = `${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`;
+          const qty = c.quantity || 1;
+          const itemName = c.item_name || 'Inconnu';
+          
+          if (!monthlyItems[monthKey]) {
+            monthlyItems[monthKey] = {};
+          }
+          if (!monthlyItems[monthKey][itemName]) {
+            monthlyItems[monthKey][itemName] = 0;
+          }
+          monthlyItems[monthKey][itemName] += qty;
+          allItems.add(itemName);
+        });
+
+        const labels = Object.keys(monthlyItems);
+        const itemNames = Array.from(allItems);
+        
+        // Prepare datasets
+        const colors = [
+          '#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6',
+          '#ec4899', '#14b8a6', '#f97316', '#6366f1', '#eab308',
+          '#06b6d4', '#64748b', '#22c55e', '#84cc16', '#d946ef'
+        ];
+        
+        const datasets = itemNames.map((itemName, index) => {
+          const data = labels.map(month => {
+            return monthlyItems[month][itemName] || 0;
+          });
+          return {
+            label: itemName,
+            data: data,
+            backgroundColor: colors[index % colors.length],
+            borderWidth: 0
+          };
+        });
+
+        if (window.itemsMonthlyChartInstance) {
+          window.itemsMonthlyChartInstance.destroy();
+        }
+
+        const ctx = canvas.getContext('2d');
+        const gridColor = 'rgba(255, 255, 255, 0.05)';
+        const textColor = '#94a3b8';
+
+        window.itemsMonthlyChartInstance = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: labels,
+            datasets: datasets
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              x: {
+                stacked: true,
+                ticks: { color: textColor },
+                grid: { display: false, color: gridColor }
+              },
+              y: {
+                stacked: true,
+                ticks: { color: textColor },
+                grid: { color: gridColor }
+              }
+            },
+            plugins: {
+              legend: {
+                position: 'bottom',
+                labels: { color: '#f8fafc', font: { family: "'Outfit', sans-serif", size: 11 }, boxWidth: 12 }
+              },
+              tooltip: {
+                backgroundColor: 'rgba(5, 8, 22, 0.9)',
+                titleFont: { family: "'Outfit', sans-serif", size: 13 },
+                bodyFont: { family: "'Outfit', sans-serif", size: 12 },
+                padding: 12,
+                borderColor: 'rgba(255, 255, 255, 0.1)',
+                borderWidth: 1,
+                callbacks: {
+                  label: function (context) {
+                    return ' ' + context.dataset.label + ' : ' + context.raw + ' unités';
+                  }
+                }
+              }
+            }
+          }
+        });
+      } catch (err) {
+        console.error("Erreur graphique items:", err);
+      }
+    }
+    window.renderItemsMonthlyChart = renderItemsMonthlyChart;
     window.supabaseClient = supabaseClient;
     console.log("Client Supabase initialisé.");
 
@@ -449,7 +432,7 @@ async function initAuth() {
 
       toggleLoading(true);
       const { error, data } = await supabaseClient.auth.signInWithPassword({ email, password });
-      
+
       if (error) {
         alert("Mot de passe incorrect : " + error.message);
         toggleLoading(false);
@@ -483,7 +466,7 @@ function handleSignOut() {
   if (inactivityTimeout) {
     clearTimeout(inactivityTimeout);
   }
-  
+
   const lockedEmail = sessionStorage.getItem('locked_email');
   if (lockedEmail) {
     const lockDisplay = document.getElementById('lock-email-display');
@@ -497,7 +480,7 @@ function handleSignOut() {
 // --- CONTROLE D'ACCES PAR ROLE & VERROUILLAGE D'INACTIVITE ---
 function applyRoleAccessControl() {
   let role = currentUser?.profile?.role || 'member';
-  
+
   // SÉCURITÉ ABSOLUE : Forcer le rôle admin pour le créateur
   if (currentUser?.email === 'sebastien.tessier41@orange.fr') {
     role = 'admin';
@@ -531,7 +514,7 @@ function applyRoleAccessControl() {
   if (isAdminTabVisible) {
     if (navAdmin) navAdmin.style.display = '';
     if (mobileNavBar) mobileNavBar.style.display = ''; // Assure mobile nav is visible for admin tab
-    
+
     if (currentSection) {
       switchSection(currentSection);
     } else {
@@ -724,28 +707,28 @@ function initNavigation() {
             const { data: allDrinks } = await supabaseClient.from('drinks').select('*');
             let alertList = "";
             let globalStock = "";
-            
+
             let hasAlerts = false;
             if (allDrinks) {
               const currentInList = allDrinks.find(d => d.id === id);
               if (currentInList) currentInList.stock = newStock;
-              
+
               // Trier par ordre alphabétique pour l'état global
               allDrinks.sort((a, b) => a.name.localeCompare(b.name));
-              
+
               let alertsAtThreshold = [];
               let alertsBelowThreshold = [];
 
               allDrinks.forEach(d => {
                 const stock = d.stock || 0;
                 const threshold = d.alert_threshold || 0;
-                
+
                 const nomBoisson = d.name.padEnd(25, ' ');
                 const icon = (stock <= threshold) ? '🚨' : '✅';
-                
+
                 // Ligne pour l'état global
                 globalStock += `${icon} ${nomBoisson} : ${stock}\n`;
-                
+
                 // Catégorisation pour les alertes
                 if (stock <= threshold) {
                   hasAlerts = true;
@@ -757,21 +740,21 @@ function initNavigation() {
                   }
                 }
               });
-              
+
               // Trier ceux en dessous du seuil par ordre croissant de stock
               alertsBelowThreshold.sort((a, b) => a.stock - b.stock);
-              
+
               alertList = alertsAtThreshold.join('') + alertsBelowThreshold.map(a => a.line).join('');
             }
-            
+
             if (!hasAlerts) alertList = "Aucune autre boisson en alerte.\n";
-            
+
             // Récupérer les emails des administrateurs et gestionnaires de stocks
             const { data: managers } = await supabaseClient
               .from('profiles')
               .select('email')
               .or('role.eq.admin,can_manage_stock.eq.true');
-            
+
             let adminEmails = "";
             if (managers && managers.length > 0) {
               adminEmails = managers.map(m => m.email).filter(Boolean).join(',');
@@ -788,7 +771,7 @@ function initNavigation() {
               console.error("Erreur envoi EmailJS :", err);
             });
           } else {
-             console.warn("EmailJS non chargé.");
+            console.warn("EmailJS non chargé.");
           }
         }
       }
@@ -821,10 +804,13 @@ function initNavigation() {
       document.querySelectorAll('.admin-pane').forEach(p => p.classList.remove('active'));
       tab.classList.add('active');
       document.getElementById(paneId).classList.add('active');
-      
+
       if (paneId === 'adm-stats') {
         if (typeof renderSalesChart === 'function') {
           renderSalesChart();
+        }
+        if (typeof renderItemsMonthlyChart === 'function') {
+          renderItemsMonthlyChart();
         }
       }
     });
@@ -1305,18 +1291,18 @@ async function logConsumption(id, name, price) {
 window.logConsumption = logConsumption;
 
 // --- ADMIN LOGIC ---
-window.openStockModal = function(drinkId, drinkName) {
+window.openStockModal = function (drinkId, drinkName) {
   const modal = document.getElementById('stock-modal');
   document.getElementById('stock-drink-name').textContent = drinkName;
   document.getElementById('stock-drink-id').value = drinkId;
   document.getElementById('stock-input-value').value = '0';
   document.getElementById('stock-action-type').value = 'add';
-  
+
   // Reset tabs
   document.getElementById('tab-add-stock').classList.add('active');
   document.getElementById('tab-set-stock').classList.remove('active');
   document.getElementById('stock-input-label').textContent = 'Quantité à ajouter (peut être négatif)';
-  
+
   modal.classList.remove('hidden');
 };
 
@@ -1333,7 +1319,7 @@ document.getElementById('tab-set-stock')?.addEventListener('click', (e) => {
   document.getElementById('tab-add-stock').classList.remove('active');
   document.getElementById('stock-action-type').value = 'set';
   document.getElementById('stock-input-label').textContent = 'Nouveau stock réel (Inventaire)';
-  
+
   // Set to current stock
   const drinkId = parseInt(document.getElementById('stock-drink-id').value);
   const drink = drinks.find(d => d.id === drinkId);
@@ -1344,9 +1330,9 @@ document.getElementById('save-stock-btn')?.addEventListener('click', async () =>
   const drinkId = parseInt(document.getElementById('stock-drink-id').value);
   const actionType = document.getElementById('stock-action-type').value;
   const inputValue = parseInt(document.getElementById('stock-input-value').value);
-  
+
   if (isNaN(inputValue)) return alert("Veuillez saisir un nombre valide.");
-  
+
   const drink = drinks.find(d => d.id === drinkId);
   if (!drink) return;
 
@@ -1360,7 +1346,7 @@ document.getElementById('save-stock-btn')?.addEventListener('click', async () =>
 
   toggleLoading(true);
   const { error } = await supabaseClient.from('drinks').update({ stock: newStock }).eq('id', drinkId);
-  
+
   if (!error && currentUser) {
     try {
       await supabaseClient.from('stock_movements').insert({
@@ -1371,7 +1357,7 @@ document.getElementById('save-stock-btn')?.addEventListener('click', async () =>
         previous_stock: actionType === 'add' ? (drink.stock || 0) : null,
         new_stock: newStock
       });
-    } catch(err) {
+    } catch (err) {
       console.warn("Erreur insertion historique de stock:", err);
     }
   }
@@ -1483,7 +1469,7 @@ async function loadAdminData() {
 
   const isSuperAdmin = currentUser?.profile?.role === 'admin';
   const canManageStock = currentUser?.profile?.can_manage_stock === true;
-  
+
   // Gérer la visibilité des onglets
   document.querySelectorAll('.btn-tab').forEach(btn => {
     const tabName = btn.getAttribute('data-tab');
@@ -1497,14 +1483,14 @@ async function loadAdminData() {
       }
     }
   });
-  
+
   // Si non admin mais gestionnaire, forcer l'onglet actif sur adm-drinks
   if (!isSuperAdmin && canManageStock) {
-      document.querySelectorAll('.btn-tab').forEach(t => t.classList.remove('active'));
-      document.querySelectorAll('.admin-pane').forEach(p => p.classList.remove('active'));
-      const drinksTabBtn = document.querySelector('.btn-tab[data-tab="adm-drinks"]');
-      if (drinksTabBtn) drinksTabBtn.classList.add('active');
-      document.getElementById('adm-drinks')?.classList.add('active');
+    document.querySelectorAll('.btn-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.admin-pane').forEach(p => p.classList.remove('active'));
+    const drinksTabBtn = document.querySelector('.btn-tab[data-tab="adm-drinks"]');
+    if (drinksTabBtn) drinksTabBtn.classList.add('active');
+    document.getElementById('adm-drinks')?.classList.add('active');
   }
 
   // 1. Unified Members Fetch
@@ -1741,7 +1727,7 @@ async function loadAdminData() {
       const safeName = d.name.replace(/'/g, "\\'");
       const stockVal = d.stock !== null && d.stock !== undefined ? d.stock : 'Non géré';
       const stockDisplay = stockVal <= 0 ? `<span class="text-danger font-bold">${stockVal}</span>` : `<span class="text-success font-bold">${stockVal}</span>`;
-      
+
       row.innerHTML = `
         <td>${d.name}</td>
         <td>${stockVal === 'Non géré' ? stockVal : stockDisplay}</td>
@@ -2030,7 +2016,7 @@ document.getElementById('save-manual-member-btn').addEventListener('click', asyn
         profileUpdates.avatar_url = avatarUrl;
       }
       profileUpdates.can_manage_stock = canManageStock;
-      
+
       if (Object.keys(profileUpdates).length > 0) {
         try {
           await supabaseClient.from('profiles').update(profileUpdates).eq('id', profile.id);
@@ -2120,13 +2106,13 @@ document.getElementById('export-stock-csv-btn')?.addEventListener('click', async
     XLSX.utils.book_append_sheet(wb, ws_cons, "Consommations");
 
     XLSX.writeFile(wb, `export_stocks_consommations_${new Date().toISOString().split('T')[0]}.xlsx`);
-    
+
   } catch (err) {
     alert("Erreur lors de l'export : " + err.message);
   } finally {
     hide('loading');
   }
-});async function clearMemberBalance(memberId) {
+}); async function clearMemberBalance(memberId) {
   if (!confirm("Marquer TOUTE l'ardoise comme payée pour ce membre ?")) return;
 
   show('loading');
