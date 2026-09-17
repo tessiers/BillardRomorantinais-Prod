@@ -262,7 +262,7 @@ function renderItemsChart(topItemsData) {
       cutout: '65%',
       plugins: {
         legend: {
-          position: 'right',
+          position: 'bottom',
           labels: { color: '#f8fafc', font: { family: "'Outfit', sans-serif" } }
         },
         tooltip: {
