@@ -226,8 +226,8 @@ function renderItemsChart(topItemsData) {
   } else {
     sortedItems.forEach(item => {
       tableBody.innerHTML += `<tr>
-        <td>${item[0]}</td>
-        <td style="text-align: right; font-weight: bold; color: var(--accent-orange);">${item[1]}</td>
+        <td style="text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">${item[0]}</td>
+        <td style="text-align: right; font-weight: bold; color: var(--accent-orange); padding-right: 1.5rem;">${item[1]}</td>
       </tr>`;
     });
   }
