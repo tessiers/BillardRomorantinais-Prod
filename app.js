@@ -259,11 +259,15 @@ function renderItemsChart(topItemsData) {
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      cutout: '65%',
+      cutout: '50%',
       plugins: {
         legend: {
           position: 'bottom',
-          labels: { color: '#f8fafc', font: { family: "'Outfit', sans-serif" } }
+          labels: { 
+            color: '#f8fafc', 
+            font: { family: "'Outfit', sans-serif", size: 11 },
+            boxWidth: 12
+          }
         },
         tooltip: {
           backgroundColor: 'rgba(5, 8, 22, 0.9)',
