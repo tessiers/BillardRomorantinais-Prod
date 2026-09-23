@@ -1523,8 +1523,11 @@ async function loadAdminData() {
           <td>
             <span class="badge badge-active" style="font-size: 0.7rem;">Inscrit</span>
           </td>
-          <td>
-            <input type="checkbox" onchange="toggleMemberApproval('${m.id}', this.checked)" ${m.is_approved ? 'checked' : ''}>
+          <td style="text-align: center; vertical-align: middle;">
+            <label class="toggle-switch">
+              <input type="checkbox" onchange="toggleMemberApproval('${m.id}', this.checked)" ${m.is_approved ? 'checked' : ''}>
+              <span class="slider"></span>
+            </label>
           </td>
           <td class="${balance > 0 ? 'text-danger font-bold' : ''}">${balance.toFixed(2)}€</td>
           <td>
@@ -1567,8 +1570,11 @@ async function loadAdminData() {
           <td>
             <span class="badge badge-expired" style="font-size: 0.7rem;">En attente</span>
           </td>
-          <td>
-            <input type="checkbox" disabled title="Le compte n'est pas encore créé par l'utilisateur.">
+          <td style="text-align: center; vertical-align: middle;">
+            <label class="toggle-switch">
+              <input type="checkbox" disabled title="Le compte n'est pas encore créé par l'utilisateur.">
+              <span class="slider"></span>
+            </label>
           </td>
           <td>0.00€</td>
           <td>
