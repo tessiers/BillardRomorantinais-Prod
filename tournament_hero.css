@@ -111,3 +111,49 @@
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
+
+/* -------------------------------------------
+   PREMIUM GLASSMORPHISM POUR LE MODE TOURNOI
+   (Aux couleurs du club : Bleu & Or)
+   ------------------------------------------- */
+
+/* Arrière-plan spécifique aux écrans de tournoi */
+.tournoi-shell {
+    background: radial-gradient(at 0% 0%, rgba(10, 37, 64, 0.6) 0px, transparent 60%),
+                radial-gradient(at 100% 100%, rgba(229, 179, 65, 0.15) 0px, transparent 60%),
+                var(--bg-main) !important;
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+}
+
+/* Effet Glassmorphism pour les cartes principales */
+.glass-card {
+    background: rgba(10, 37, 64, 0.6) !important; /* Bleu marine semi-transparent */
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    border: 1px solid rgba(229, 179, 65, 0.25) !important; /* Bordure dorée subtile */
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important;
+    border-radius: 16px;
+}
+
+/* Texte Néon / Premium pour les titres */
+.neon-text-gold {
+    text-shadow: 0 0 15px rgba(229, 179, 65, 0.5);
+    color: var(--accent-gold) !important;
+}
+
+/* Bracket Cards - Cartes de matchs dans le tableau final */
+.bracket-board .match-card {
+    background: rgba(10, 37, 64, 0.8) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    backdrop-filter: blur(8px);
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.bracket-board .match-card:hover {
+    box-shadow: 0 0 20px rgba(229, 179, 65, 0.4) !important; /* Glow doré au survol */
+    border-color: rgba(229, 179, 65, 0.6) !important;
+    transform: translateY(-2px);
+}

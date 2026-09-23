@@ -1019,15 +1019,10 @@ async function loadAppData() {
       document.getElementById('section-pc-blocked-interception').style.display = 'none';
     }
 
-    const subs = currentUser.profile?.subscriptions || [];
-    const activeSub = subs.sort((a, b) => new Date(b.end_date) - new Date(a.end_date))[0];
-    const todayStr = new Date().toISOString().split('T')[0];
-    const isExpired = !activeSub || activeSub.end_date < todayStr;
+    const isApproved = currentUser.profile?.is_approved === true;
 
-    if (role !== 'admin' && isExpired) {
+    if (role !== 'admin' && !isApproved) {
       document.getElementById('section-expired-interception').style.display = 'flex';
-      document.getElementById('expired-sub-name').textContent = activeSub ? `Abonnement expiré : ${activeSub.subscription_types?.name || 'Standard'}` : "Aucun abonnement actif";
-      document.getElementById('expired-sub-date').textContent = activeSub ? new Date(activeSub.end_date).toLocaleDateString() : 'Non renseignée';
 
       const expiredLogoutBtn = document.getElementById('btn-logout-expired');
       if (expiredLogoutBtn) {
@@ -1038,84 +1033,6 @@ async function loadAppData() {
           toggleLoading(false);
         };
       }
-
-      // Affichage des adhésions disponibles
-      const { data: allDrinks } = await supabaseClient.from('drinks').select('*');
-      const { data: subTypes } = await supabaseClient.from('subscription_types').select('*');
-
-      const memberships = allDrinks?.filter(d => d.name.toLowerCase().includes('adhésion') || d.name.toLowerCase().includes('adhesion') || d.name.toLowerCase().includes('abonnement')) || [];
-
-      const membershipsList = document.getElementById('expired-memberships-list');
-      if (membershipsList) {
-        membershipsList.innerHTML = memberships.map(d => {
-          return `
-                    <button class="btn btn-outline" onclick="purchaseMembership(${d.id}, '${d.name.replace(/'/g, "\\'")}', ${d.price})" style="justify-content: space-between; padding: 1rem; border-radius: 10px; background: rgba(34, 197, 94, 0.1); border-color: rgba(34, 197, 94, 0.3); color: white;">
-                        <div style="display:flex; align-items:center; gap: 0.5rem;">
-                            <i data-lucide="${d.icon || 'check-circle'}" style="color: #22c55e;"></i>
-                            <span style="font-weight: 600;">${d.name}</span>
-                        </div>
-                        <span style="font-weight: bold; color: #22c55e;">${d.price}€</span>
-                    </button>
-                    `;
-        }).join('');
-      }
-
-      // Fonction globale pour acheter l'adhésion
-      window.purchaseMembership = async (drinkId, name, price) => {
-        if (!confirm(`Souscrire à "${name}" pour ${price}€ ? Le montant sera ajouté à votre ardoise.`)) return;
-
-        toggleLoading(true);
-        try {
-          // 0. S'assurer que le profil existe (cas où il aurait été supprimé manuellement)
-          const { data: profCheck } = await supabaseClient.from('profiles').select('id').eq('id', currentUser.id).maybeSingle();
-          if (!profCheck) {
-            const { error: profCreateErr } = await supabaseClient.from('profiles').insert({
-              id: currentUser.id,
-              email: currentUser.email,
-              full_name: currentUser.profile?.full_name || currentUser.email.split('@')[0],
-              role: 'member'
-            });
-            if (profCreateErr) throw new Error("Impossible de recréer votre profil : " + profCreateErr.message);
-          }
-
-          // 1. Ajouter à la consommation (ardoise)
-          const { error: consError } = await supabaseClient.from('consumptions').insert({
-            member_id: currentUser.id,
-            drink_id: drinkId,
-            price_at_time: price
-          });
-          if (consError) throw consError;
-
-          // 2. Trouver le type d'abonnement correspondant (par le prix ou le nom)
-          const matchedType = subTypes?.find(t => t.price === price || name.toLowerCase().includes(t.name.toLowerCase()));
-
-          if (matchedType) {
-            const startDate = new Date();
-            const endDate = new Date();
-            let dur = matchedType.duration_days;
-            if (dur === null || dur === undefined || isNaN(dur)) dur = 30;
-            endDate.setDate(startDate.getDate() + dur);
-
-            const { error: subError } = await supabaseClient.from('subscriptions').insert({
-              member_id: currentUser.id,
-              type_id: matchedType.id,
-              start_date: startDate.toISOString().split('T')[0],
-              end_date: endDate.toISOString().split('T')[0]
-            });
-
-            if (subError) throw subError;
-
-            alert("Adhésion validée ! Vous pouvez maintenant accéder au portail.");
-            document.getElementById('section-expired-interception').style.display = 'none';
-            loadAppData(); // Recharge l'app avec les nouveaux droits
-          } else {
-            throw new Error("Type d'abonnement correspondant non trouvé. L'admin devra vous débloquer manuellement.");
-          }
-        } catch (err) {
-          alert("Erreur lors de la souscription : " + err.message);
-          toggleLoading(false);
-        }
-      };
 
       toggleLoading(false);
       if (typeof lucide !== 'undefined') lucide.createIcons();
@@ -1606,11 +1523,8 @@ async function loadAdminData() {
           <td class="clickable-cell" title="Modifier l'abonnement" onclick="openSubscriptionFor('${safeName}', '${safeEmail}')">
             <span class="badge badge-active" style="font-size: 0.7rem;">Inscrit</span>
           </td>
-          <td class="clickable-cell" title="Modifier l'abonnement" onclick="openSubscriptionFor('${safeName}', '${safeEmail}')">
-            ${lastSub ? lastSub.subscription_types.name : '<span class="text-muted">Aucun</span>'}
-          </td>
-          <td class="clickable-cell ${isExpired ? 'text-danger font-bold' : (isJ4 ? 'text-warning font-bold' : 'text-success font-bold')}" title="Modifier l'abonnement" onclick="openSubscriptionFor('${safeName}', '${safeEmail}')">
-            ${lastSub ? new Date(lastSub.end_date).toLocaleDateString() : '-'}
+          <td>
+            <input type="checkbox" onchange="toggleMemberApproval('${m.id}', this.checked)" ${m.is_approved ? 'checked' : ''}>
           </td>
           <td class="${balance > 0 ? 'text-danger font-bold' : ''}">${balance.toFixed(2)}€</td>
           <td>
@@ -1653,11 +1567,8 @@ async function loadAdminData() {
           <td class="clickable-cell" title="Modifier l'abonnement" onclick="openSubscriptionFor('${safeName}', '${safeEmail}')">
             <span class="badge badge-expired" style="font-size: 0.7rem;">En attente</span>
           </td>
-          <td class="clickable-cell" title="Modifier l'abonnement" onclick="openSubscriptionFor('${safeName}', '${safeEmail}')">
-            ${p.subscription_types?.name || 'Inconnu'}
-          </td>
-          <td class="clickable-cell ${isExpired ? 'text-danger font-bold' : (isJ4 ? 'text-warning font-bold' : 'text-success font-bold')}" title="Modifier l'abonnement" onclick="openSubscriptionFor('${safeName}', '${safeEmail}')">
-            ${p.subscription_end_date ? new Date(p.subscription_end_date).toLocaleDateString() : '-'}
+          <td>
+            <input type="checkbox" disabled title="Le compte n'est pas encore créé par l'utilisateur.">
           </td>
           <td>0.00€</td>
           <td>

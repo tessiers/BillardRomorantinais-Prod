@@ -281,18 +281,6 @@
                 <span class="label">Ardoise Totale</span>
                 <span class="value danger" id="mem-balance">0.00€</span>
               </div>
-              <div class="stat-item">
-                <span class="label">Abonnement</span>
-                <span class="value" id="mem-sub-type">-</span>
-              </div>
-              <div class="stat-item">
-                <span class="label">Statut</span>
-                <span class="value" id="mem-sub-badge">Chargement...</span>
-              </div>
-              <div class="stat-item">
-                <span class="label">Date de fin</span>
-                <span class="value" id="mem-sub-end-date">-</span>
-              </div>
             </div>
           </div>
 
@@ -565,11 +553,11 @@
 
           <!-- Screens de tournoi -->
           <div id="tournoi-screen" class="tournoi-shell hidden screen-transition">
-            <div class="card">
+            <div class="card glass-card">
               <div class="tournoi-header">
                 <div class="tournoi-heading">
                   <div>
-                    <h2 class="tournoi-title">Tournoi en cours</h2>
+                    <h2 class="tournoi-title neon-text-gold">Tournoi en cours</h2>
                     <p class="tournoi-sub" id="tournoi-meta"></p>
                   </div>
                 </div>
@@ -655,11 +643,11 @@
 
           <!-- Sortants -->
           <div id="sortants-screen" class="tournoi-shell hidden screen-transition">
-            <div class="card">
+            <div class="card glass-card">
               <div class="tournoi-header">
                 <div class="tournoi-heading">
                   <div>
-                    <h2 class="tournoi-title">Sortants connus 🎯</h2>
+                    <h2 class="tournoi-title neon-text-gold">Sortants connus 🎯</h2>
                     <p class="tournoi-sub">Le Cartésien est en pause. Configure le tableau final
                       tour par tour.</p>
                   </div>
@@ -714,11 +702,11 @@
 
           <!-- Tableau Final -->
           <div id="tableau-final-screen" class="tournoi-shell hidden screen-transition">
-            <div class="card">
+            <div class="card glass-card">
               <div class="tournoi-header">
                 <div class="tournoi-heading">
                   <div>
-                    <h2 class="tournoi-title">Tableau final 🏆</h2>
+                    <h2 class="tournoi-title neon-text-gold">Tableau final 🏆</h2>
                     <p class="tournoi-sub" id="tableau-final-meta"></p>
                   </div>
                 </div>
@@ -775,10 +763,10 @@
 
           <!-- Dashboard / Statistiques -->
           <div id="dashboard-screen" class="tournoi-shell hidden screen-transition">
-            <div class="card">
+            <div class="card glass-card">
               <div class="tournoi-header">
                 <div class="tournoi-heading">
-                  <h2 class="tournoi-title">Statistiques Annuelles 📊</h2>
+                  <h2 class="tournoi-title neon-text-gold">Statistiques Annuelles 📊</h2>
                   <p class="tournoi-sub">Historique de tous les tournois joués et archivés.</p>
                 </div>
                 <button type="button" id="retour-config-depuis-dashboard" class="btn-alt" style="width:auto;">Retour
@@ -851,7 +839,6 @@
               <button class="btn-tab" data-tab="adm-consumptions">Consommations</button>
               <button class="btn-tab" data-tab="adm-drinks">Boissons</button>
               <button class="btn-tab" data-tab="adm-stocks">Stock Boissons</button>
-              <button class="btn-tab" data-tab="adm-subs">Abonnements</button>
               <button class="btn-tab" data-tab="adm-stats">Statistiques</button>
             </div>
           </div>
@@ -878,8 +865,7 @@
                     <th>Nom</th>
                     <th>Email</th>
                     <th>Statut</th>
-                    <th>Abonnement</th>
-                    <th>Fin adhésion</th>
+                    <th>Accès Validé</th>
                     <th>Solde Bar</th>
                     <th>Actions</th>
                   </tr>
@@ -912,7 +898,6 @@
                   <tr>
                     <th>Membre</th>
                     <th>Email</th>
-                    <th>Abonnement</th>
                     <th>Ardoise Actuelle</th>
                     <th>Actions</th>
                   </tr>
@@ -975,31 +960,6 @@
           </div>
 
 
-          <!-- Abonnements Section -->
-          <div id="adm-subs" class="admin-pane card">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-              <h3><i data-lucide="credit-card"></i> Types d'Abonnements</h3>
-              <button class="btn-main" id="add-subtype-btn"
-                style="display: flex; align-items: center; gap: 0.5rem; padding: 6px 12px; border-radius: 8px; border: none;"><i
-                  data-lucide="plus" style="width:16px;"></i> Nouveau Type</button>
-            </div>
-            <div class="table-wrapper">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Nom</th>
-                    <th>Durée (jours)</th>
-                    <th>Prix</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody id="admin-subtype-list">
-                  <!-- Injecté par JS -->
-                </tbody>
-              </table>
-            </div>
-          </div>
-
           <!-- Stats Section -->
           <div id="adm-stats" class="admin-pane card">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
@@ -1045,14 +1005,6 @@
             <div class="input-group">
               <label>Email (Essentiel pour l'inscription future)</label>
               <input type="email" id="manual-mem-email">
-            </div>
-            <div class="input-group">
-              <label>Type d'abonnement</label>
-              <select id="manual-mem-type" class="custom-select"></select>
-            </div>
-            <div class="input-group">
-              <label>Date de fin (Validité)</label>
-              <input type="date" id="manual-mem-end-date" class="custom-select">
             </div>
             <div style="display: flex; gap: 8px; align-items: center; margin-top: 1rem;">
               <input type="checkbox" id="manual-mem-can-manage-stock" style="width: auto;">
@@ -1261,7 +1213,7 @@
           </div>
         </div>
 
-        <!-- Écran d'interception bloquant si abonnement expiré -->
+        <!-- Écran d'interception bloquant si compte non validé -->
         <div id="section-expired-interception" class="view"
           style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(5, 8, 22, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); z-index: 9999; display: none; align-items: center; justify-content: center; padding: 2rem;">
           <div class="card"
@@ -1271,18 +1223,11 @@
               <i data-lucide="alert-triangle" style="width: 32px; height: 32px;"></i>
             </div>
             <h2 style="font-size: 1.75rem; color: white; margin: 0;">Accès Limité</h2>
-            <h4 style="color: #ef4444; font-size: 1.1rem; margin: 0; font-weight: 600;" id="expired-sub-name">Abonnement
-              Expiré</h4>
+            <h4 style="color: #ef4444; font-size: 1.1rem; margin: 0; font-weight: 600;" id="expired-sub-name">En attente de validation</h4>
             <p style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.6; margin: 0 0 1rem 0;">
-              Votre abonnement s'est terminé le <strong id="expired-sub-date" style="color: white;">-</strong>.<br>
-              Pour continuer à accéder au club, vous pouvez renouveler votre adhésion ci-dessous. Le
-              montant sera ajouté à votre ardoise.
+              Votre compte est actuellement en attente de validation par un administrateur du club.<br>
+              Veuillez contacter un responsable pour faire valider votre accès.
             </p>
-
-            <div id="expired-memberships-list"
-              style="display: flex; flex-direction: column; gap: 0.5rem; width: 100%; margin-bottom: 1rem;">
-              <!-- Injecté par le JS -->
-            </div>
 
             <button id="btn-logout-expired" class="btn btn-outline"
               style="border-color: rgba(239, 68, 68, 0.3); color: #ef4444; width: 100%; justify-content: center; gap: 0.5rem; background: rgba(239, 68, 68, 0.05); padding: 0.8rem; font-weight: 600; border-radius: 10px;">
