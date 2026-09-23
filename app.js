@@ -1019,7 +1019,23 @@ async function loadAppData() {
       document.getElementById('section-pc-blocked-interception').style.display = 'none';
     }
 
-    const isApproved = currentUser.profile?.is_approved === true;
+    let isApproved = currentUser.profile?.is_approved === true;
+
+    if (role !== 'admin' && !isApproved) {
+      // --- NOUVEAUTÉ : Vérifier si l'utilisateur a été pré-validé ---
+      const { data: imported } = await supabaseClient
+        .from('imported_members')
+        .select('is_approved')
+        .eq('email', currentUser.email.toLowerCase().trim())
+        .maybeSingle();
+
+      if (imported && imported.is_approved === true) {
+        isApproved = true;
+        if (currentUser.profile) currentUser.profile.is_approved = true;
+        // Tente de mettre à jour la base (peut échouer selon les règles RLS, mais on autorise l'accès frontend)
+        supabaseClient.from('profiles').update({ is_approved: true }).eq('id', currentUser.id).then();
+      }
+    }
 
     if (role !== 'admin' && !isApproved) {
       document.getElementById('section-expired-interception').style.display = 'flex';
@@ -1496,7 +1512,7 @@ async function loadAdminData() {
           </td>
           <td style="text-align: center; vertical-align: middle;">
             <label class="toggle-switch">
-              <input type="checkbox" disabled title="Le compte n'est pas encore créé par l'utilisateur.">
+              <input type="checkbox" onchange="togglePendingApproval(${p.id}, this.checked)" ${p.is_approved ? 'checked' : ''} title="Pré-valider ce membre pour sa future inscription">
               <span class="slider"></span>
             </label>
           </td>
@@ -1599,6 +1615,34 @@ async function deleteProfile(id) {
   const { error } = await supabaseClient.from('profiles').delete().eq('id', id);
   if (error) alert("Erreur: " + error.message);
   else loadAdminData();
+}
+
+async function toggleMemberApproval(profileId, isApproved) {
+  show('loading');
+  const { error } = await supabaseClient
+    .from('profiles')
+    .update({ is_approved: isApproved })
+    .eq('id', profileId);
+  hide('loading');
+  
+  if (error) {
+    alert("Erreur lors de la mise à jour: " + error.message);
+    loadAdminData(); // recharger pour remettre le bouton dans le bon état
+  }
+}
+
+async function togglePendingApproval(importId, isApproved) {
+  show('loading');
+  const { error } = await supabaseClient
+    .from('imported_members')
+    .update({ is_approved: isApproved })
+    .eq('id', importId);
+  hide('loading');
+  
+  if (error) {
+    alert("Erreur lors de la mise à jour: " + error.message);
+    loadAdminData(); // recharger pour remettre le bouton dans le bon état
+  }
 }
 
 async function toggleAdminRole(profileId, currentRole) {
