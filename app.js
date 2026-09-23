@@ -1602,25 +1602,6 @@ async function loadAdminData() {
     });
   }
 
-
-  const { data: sTypes } = await supabaseClient.from('subscription_types').select('*');
-  const sBody = document.getElementById('admin-subtype-list');
-  sBody.innerHTML = '';
-  sTypes?.forEach(t => {
-    const row = document.createElement('tr');
-    row.innerHTML = `
-          <td>${t.name}</td>
-          <td>${t.duration_days}j</td>
-          <td>${t.price}€</td>
-          <td>
-            <div style="display: flex; gap: 0.5rem;">
-              <button class="btn btn-outline" onclick="editSubType(${t.id})"><i data-lucide="pencil" size="16"></i></button>
-              <button class="btn btn-outline btn-danger" onclick="deleteSubType(${t.id})"><i data-lucide="trash" size="16"></i></button>
-            </div>
-          </td>
-        `;
-    sBody.appendChild(row);
-  });
   lucide.createIcons();
 }
 
