@@ -1095,25 +1095,7 @@ function renderManagementUI() {
 
   document.getElementById('mem-balance').textContent = `${currentUser.balance.toFixed(2)}€`;
 
-  const subs = currentUser.profile?.subscriptions || [];
-  const activeSub = subs.sort((a, b) => new Date(b.end_date) - new Date(a.end_date))[0];
 
-  const subTypeEl = document.getElementById('mem-sub-type');
-  const subBadgeEl = document.getElementById('mem-sub-badge');
-  const subEndDateEl = document.getElementById('mem-sub-end-date');
-
-  if (activeSub) {
-    subTypeEl.textContent = activeSub.subscription_types?.name || 'Standard';
-    const isExpired = new Date(activeSub.end_date) < new Date();
-    subBadgeEl.textContent = isExpired ? 'Expiré' : 'Actif';
-    subBadgeEl.className = isExpired ? 'value danger' : 'value success';
-    if (subEndDateEl) subEndDateEl.textContent = new Date(activeSub.end_date).toLocaleDateString();
-  } else {
-    subTypeEl.textContent = 'Aucun';
-    subBadgeEl.textContent = 'Inactif';
-    subBadgeEl.className = 'value danger';
-    if (subEndDateEl) subEndDateEl.textContent = 'Expiré';
-  }
 
   // Drinks List
   const drinkList = document.getElementById('drinks-list');
