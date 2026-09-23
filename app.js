@@ -1321,65 +1321,7 @@ function closeModal(id) { hide(id); }
 let editingDrinkId = null;
 let editingSubTypeId = null;
 
-// Fonction globale pour ouvrir le modal d'abonnement pré-rempli pour un membre existant
-async function openSubscriptionFor(fullName, email) {
-  if (!email) {
-    alert("Impossible de modifier l'abonnement de ce membre car il n'a pas d'adresse e-mail renseignée.");
-    return;
-  }
 
-  // 1. Charger les types d'abonnements si non présents en cache
-  if (!window.cachedSubTypes || window.cachedSubTypes.length === 0) {
-    const { data: types } = await supabaseClient.from('subscription_types').select('*');
-    window.cachedSubTypes = types || [];
-  }
-
-  const select = document.getElementById('manual-mem-type');
-  select.innerHTML = `<option value="">-- Ne pas modifier l'abonnement --</option>` + window.cachedSubTypes.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
-
-  // 2. Pré-remplir les champs dans la modale
-  document.getElementById('manual-mem-name').value = fullName;
-  document.getElementById('manual-mem-email').value = email;
-  const avatarUrlInput = document.getElementById('manual-mem-avatar-url');
-  const avatarFileInput = document.getElementById('manual-mem-avatar-file');
-  if (avatarUrlInput) avatarUrlInput.value = '';
-  if (avatarFileInput) avatarFileInput.value = '';
-
-  // 3. Charger le dossier d'abonnement importé existant
-  show('loading');
-  try {
-    const { data: existing } = await supabaseClient
-      .from('imported_members')
-      .select('*')
-      .eq('email', email.trim().toLowerCase())
-      .maybeSingle();
-    window.existingMemberRecord = existing || null;
-
-    const { data: profile } = await supabaseClient
-      .from('profiles')
-      .select('avatar_url')
-      .eq('email', email.trim().toLowerCase())
-      .maybeSingle();
-
-    if (profile && profile.avatar_url && avatarUrlInput) {
-      avatarUrlInput.value = profile.avatar_url;
-    }
-
-    // 4. Calculer dynamiquement la date de fin et afficher
-    updateCalculatedEndDate();
-
-    // Personnaliser le titre du modal pour indiquer l'édition
-    document.querySelector('#member-modal h3').textContent = "Prolonger / Modifier l'Abonnement";
-
-    show('member-modal');
-  } catch (err) {
-    console.error("Erreur lors du chargement des données d'abonnement:", err);
-    alert("Erreur lors de la récupération des données.");
-  } finally {
-    hide('loading');
-  }
-}
-window.openSubscriptionFor = openSubscriptionFor;
 
 async function loadAdminData() {
   const todayStr = new Date().toISOString().split('T')[0];
@@ -1742,53 +1684,7 @@ window.editMemberPseudo = editMemberPseudo;
 window.cachedSubTypes = [];
 window.existingMemberRecord = null;
 
-function updateCalculatedEndDate() {
-  const typeId = document.getElementById('manual-mem-type').value;
-  if (!typeId || !window.cachedSubTypes || window.cachedSubTypes.length === 0) return;
 
-  const selectedType = window.cachedSubTypes.find(t => t.id.toString() === typeId.toString());
-  if (!selectedType) return;
-
-  let duration = parseInt(selectedType.duration_days);
-  if (isNaN(duration)) duration = 365;
-
-  let baseDate = new Date();
-  let isProlongation = false;
-
-  if (window.existingMemberRecord && window.existingMemberRecord.subscription_end_date) {
-    const currentEnd = new Date(window.existingMemberRecord.subscription_end_date);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    currentEnd.setHours(0, 0, 0, 0);
-
-    if (currentEnd >= today) {
-      baseDate = new Date(window.existingMemberRecord.subscription_end_date);
-      isProlongation = true;
-    }
-  }
-
-  // Ajouter la durée de l'abonnement choisi
-  baseDate.setDate(baseDate.getDate() + duration);
-
-  // Formater en YYYY-MM-DD
-  document.getElementById('manual-mem-end-date').value = baseDate.toISOString().split('T')[0];
-
-  // Mettre à jour l'aide textuelle dans la modale
-  const helpEl = document.querySelector('#member-modal .help');
-  if (helpEl) {
-    if (window.existingMemberRecord) {
-      if (isProlongation) {
-        helpEl.innerHTML = `⚠️ <strong style="color:#ef4444;">Membre existant détecté !</strong> Son abonnement actuel se termine le <strong>${new Date(window.existingMemberRecord.subscription_end_date).toLocaleDateString()}</strong>. La prolongation démarrera le lendemain et ira jusqu'au <strong>${baseDate.toLocaleDateString()}</strong>.`;
-      } else {
-        helpEl.innerHTML = `⚠️ <strong style="color:#ef4444;">Membre existant détecté !</strong> Son abonnement est expiré. Le nouvel abonnement démarrera aujourd'hui et ira jusqu'au <strong>${baseDate.toLocaleDateString()}</strong>.`;
-      }
-      document.getElementById('save-manual-member-btn').textContent = "Prolonger / Mettre à jour";
-    } else {
-      helpEl.innerHTML = `Ce membre n'aura pas encore de compte utilisateur complet tant qu'il ne se sera pas inscrit avec ce même e-mail. L'abonnement ira jusqu'au <strong>${baseDate.toLocaleDateString()}</strong>.`;
-      document.getElementById('save-manual-member-btn').textContent = "Pré-enregistrer";
-    }
-  }
-}
 
 // Écouteur sur la saisie du nom pour l'autocomplétion intelligente
 document.getElementById('manual-mem-name').addEventListener('input', async (e) => {
@@ -1808,7 +1704,6 @@ document.getElementById('manual-mem-name').addEventListener('input', async (e) =
           .eq('email', match.email.trim().toLowerCase())
           .maybeSingle();
         window.existingMemberRecord = existing || null;
-        updateCalculatedEndDate();
       } catch (err) {
         console.error("Erreur lors de la récupération du membre:", err);
       } finally {
@@ -1836,21 +1731,10 @@ document.getElementById('manual-mem-email').addEventListener('blur', async () =>
   } else {
     window.existingMemberRecord = null;
   }
-  updateCalculatedEndDate();
-});
-
-document.getElementById('manual-mem-type').addEventListener('change', () => {
-  updateCalculatedEndDate();
 });
 
 // Modal Nouveau Membre
 document.getElementById('add-member-btn').addEventListener('click', async () => {
-  const { data: types } = await supabaseClient.from('subscription_types').select('*');
-  window.cachedSubTypes = types || [];
-
-  const select = document.getElementById('manual-mem-type');
-  select.innerHTML = types.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
-
   document.getElementById('manual-mem-name').value = '';
   document.getElementById('manual-mem-email').value = '';
   window.existingMemberRecord = null;
@@ -1858,22 +1742,17 @@ document.getElementById('add-member-btn').addEventListener('click', async () => 
   // Réinitialiser le titre par défaut du modal
   const modalTitle = document.querySelector('#member-modal h3');
   if (modalTitle) modalTitle.textContent = "Ajouter un Membre Manuellement";
-
-  updateCalculatedEndDate();
   show('member-modal');
 });
 
 document.getElementById('save-manual-member-btn').addEventListener('click', async () => {
   const name = document.getElementById('manual-mem-name').value.trim();
   const email = document.getElementById('manual-mem-email').value.trim().toLowerCase();
-  const typeId = document.getElementById('manual-mem-type').value;
-  const endDate = document.getElementById('manual-mem-end-date').value;
   let avatarUrl = document.getElementById('manual-mem-avatar-url') ? document.getElementById('manual-mem-avatar-url').value : '';
   const avatarFile = document.getElementById('manual-mem-avatar-file') ? document.getElementById('manual-mem-avatar-file').files[0] : null;
   const canManageStock = document.getElementById('manual-mem-can-manage-stock') ? document.getElementById('manual-mem-can-manage-stock').checked : false;
 
   if (!name || !email) return alert("Le nom et l'email sont requis.");
-  if (typeId && !endDate) return alert("La date de fin est requise pour modifier l'abonnement.");
 
   show('loading');
 
@@ -1890,33 +1769,11 @@ document.getElementById('save-manual-member-btn').addEventListener('click', asyn
     .maybeSingle();
 
   let isNew = !existing;
-  let startDateStr = new Date().toISOString().split('T')[0];
-
-  if (typeId && existing) {
-    if (existing.subscription_end_date) {
-      const currentEnd = new Date(existing.subscription_end_date);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      currentEnd.setHours(0, 0, 0, 0);
-
-      if (currentEnd >= today) {
-        const nextDay = new Date(existing.subscription_end_date);
-        nextDay.setDate(nextDay.getDate() + 1);
-        startDateStr = nextDay.toISOString().split('T')[0];
-      }
-    }
-  }
 
   const record = {
     full_name: name,
     email: email
   };
-
-  if (typeId) {
-    record.subscription_type_id = typeId;
-    record.subscription_end_date = endDate;
-    record.subscription_start_date = startDateStr;
-  }
 
   const { error } = await supabaseClient.from('imported_members').upsert(record, { onConflict: 'email' });
 
@@ -1941,15 +1798,6 @@ document.getElementById('save-manual-member-btn').addEventListener('click', asyn
           console.warn("Erreur MAJ profile", err);
         }
       }
-
-      if (typeId) {
-        await supabaseClient.from('subscriptions').insert({
-          member_id: profile.id,
-          type_id: typeId,
-          start_date: startDateStr,
-          end_date: endDate
-        });
-      }
     }
   }
 
@@ -1958,8 +1806,6 @@ document.getElementById('save-manual-member-btn').addEventListener('click', asyn
   else {
     if (isNew) {
       alert("Nouveau membre pré-enregistré avec succès !");
-    } else if (typeId) {
-      alert("Abonnement prolongé / mis à jour avec succès !");
     } else {
       alert("Profil mis à jour avec succès !");
     }
