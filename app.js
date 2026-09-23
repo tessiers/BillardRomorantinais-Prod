@@ -1503,7 +1503,7 @@ async function loadAdminData() {
       `<div style="width:64px; height:64px; border-radius:50%; background:rgba(34, 197, 94, 0.2); border: 1px solid rgba(34, 197, 94, 0.4); display:flex; align-items:center; justify-content:center; font-weight:bold; color:#22c55e; font-size:1.5rem;">${m.full_name.charAt(0).toUpperCase()}</div>`;
 
     row.innerHTML = `
-          <td class="clickable-cell" title="Modifier l'abonnement" onclick="openSubscriptionFor('${safeName}', '${safeEmail}')">
+          <td>
             <div style="display:flex; align-items:center; gap:8px;">
               ${avatarHtml}
               <div style="display:flex; flex-direction:column;">
@@ -1517,10 +1517,10 @@ async function loadAdminData() {
               </div>
             </div>
           </td>
-          <td class="clickable-cell" title="Modifier l'abonnement" style="font-size: 0.85rem;" onclick="openSubscriptionFor('${safeName}', '${safeEmail}')">
+          <td style="font-size: 0.85rem;">
             ${m.email || '<span class="text-muted">(non renseigné)</span>'}
           </td>
-          <td class="clickable-cell" title="Modifier l'abonnement" onclick="openSubscriptionFor('${safeName}', '${safeEmail}')">
+          <td>
             <span class="badge badge-active" style="font-size: 0.7rem;">Inscrit</span>
           </td>
           <td>
@@ -1562,9 +1562,9 @@ async function loadAdminData() {
     const safeEmail = p.email.replace(/'/g, "\\'");
 
     row.innerHTML = `
-          <td class="clickable-cell" title="Modifier l'abonnement" onclick="openSubscriptionFor('${safeName}', '${safeEmail}')">${p.full_name}</td>
-          <td class="clickable-cell" title="Modifier l'abonnement" style="font-size: 0.85rem;" onclick="openSubscriptionFor('${safeName}', '${safeEmail}')">${p.email}</td>
-          <td class="clickable-cell" title="Modifier l'abonnement" onclick="openSubscriptionFor('${safeName}', '${safeEmail}')">
+          <td>${p.full_name}</td>
+          <td style="font-size: 0.85rem;">${p.email}</td>
+          <td>
             <span class="badge badge-expired" style="font-size: 0.7rem;">En attente</span>
           </td>
           <td>
