@@ -1,0 +1,22 @@
+name: Monthly Slate Email
+
+on:
+  schedule:
+    # 08:00 UTC (9h ou 10h en France selon l'heure d'été) le 27 de chaque mois
+    - cron: '0 8 27 * *'
+  workflow_dispatch: # Permet de le lancer manuellement depuis l'interface GitHub pour tester
+
+jobs:
+  send-email:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run script
+        run: node scripts/sendMonthlySlateEmail.js
