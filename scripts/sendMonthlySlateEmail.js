@@ -72,7 +72,7 @@ async function run() {
       article_nom: "Rapport Mensuel des Ardoises (27 du mois) - 100% AUTOMATIQUE",
       alert_list: alertList,
       global_stock: globalStock,
-      admin_emails: adminEmails
+      to_email: adminEmails
     }
   };
 
@@ -102,7 +102,7 @@ async function run() {
           article_nom: "Rappel : Votre ardoise au Billard Club Romorantinais",
           alert_list: `Bonjour ${name},\n\nSauf erreur de notre part, vous avez une ardoise en attente de règlement d'un montant de ${data.balance.toFixed(2)} €.\nMerci de penser à la régler lors de votre prochain passage au club ou avant la fin du mois pour faciliter notre gestion comptable.\n\nSportivement,\nL'équipe du Billard Club.`,
           global_stock: "", // Left empty for the member email
-          admin_emails: data.email
+          to_email: data.email
         }
       };
 
