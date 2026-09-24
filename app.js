@@ -1419,12 +1419,15 @@ document.getElementById('save-stock-btn')?.addEventListener('click', async () =>
   const drink = drinks.find(d => d.id === drinkId);
   if (!drink) return;
 
+  const currentStock = drink.stock || 0;
   let newStock = 0;
+  let qtyDiff = 0;
   if (actionType === 'add') {
-    const currentStock = drink.stock || 0;
     newStock = currentStock + inputValue;
+    qtyDiff = inputValue;
   } else {
     newStock = inputValue;
+    qtyDiff = newStock - currentStock;
   }
 
   toggleLoading(true);
@@ -1436,8 +1439,8 @@ document.getElementById('save-stock-btn')?.addEventListener('click', async () =>
         drink_id: drinkId,
         user_id: currentUser.id,
         action_type: actionType,
-        quantity_changed: inputValue,
-        previous_stock: actionType === 'add' ? (drink.stock || 0) : null,
+        quantity_changed: qtyDiff,
+        previous_stock: currentStock,
         new_stock: newStock
       });
     } catch (err) {
