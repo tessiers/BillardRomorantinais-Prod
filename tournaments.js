@@ -2310,8 +2310,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const tailleBracket = puissanceDeuxSuperieureOuEgale(sortants.length);
         const totalTours = Math.log2(tailleBracket);
-        const slots = [...sortants];
-        while (slots.length < tailleBracket) slots.push(null);
+        const nbByes = tailleBracket - sortants.length;
+        
+        let finalSortants = [...sortants];
+        
+        // Si des joueurs doivent être exemptés (BYE), on force les meilleurs classés à prendre ces places
+        if (nbByes > 0 && sortantsConnusPourFinale && sortantsConnusPourFinale.length === sortants.length) {
+            const joueursPrivilegies = sortantsConnusPourFinale.slice(0, nbByes);
+            finalSortants = finalSortants.filter(j => !joueursPrivilegies.includes(j));
+            finalSortants = [...joueursPrivilegies, ...finalSortants];
+        }
+        
+        let seedOrder = [1, 2];
+        for (let currentSize = 2; currentSize < tailleBracket; currentSize *= 2) {
+            let nextMatches = [];
+            for (let i = 0; i < seedOrder.length; i++) {
+                nextMatches.push(seedOrder[i]);
+                nextMatches.push(2 * currentSize + 1 - seedOrder[i]);
+            }
+            seedOrder = nextMatches;
+        }
+        
+        const slots = [];
+        for (let i = 0; i < tailleBracket; i++) {
+            const seedIndex = seedOrder[i] - 1;
+            slots.push(finalSortants[seedIndex] || null);
+        }
 
         let idSeq = 1;
         const rounds = [];

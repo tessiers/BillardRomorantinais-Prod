@@ -1254,6 +1254,47 @@ body.mode-cartesien .participant-chip {
     gap: 16px;
 }
 
+/* Dashboard Layout based on user image */
+.dashboard-layout {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.dashboard-main {
+    grid-column: 1 / 2;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.dashboard-side {
+    grid-column: 2 / 3;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.dashboard-bottom {
+    grid-column: 1 / 3;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+
+@media (max-width: 1024px) {
+    .dashboard-layout {
+        grid-template-columns: 1fr;
+    }
+    .dashboard-main, .dashboard-side, .dashboard-bottom {
+        grid-column: 1 / -1;
+    }
+    .dashboard-bottom {
+        grid-template-columns: 1fr;
+    }
+}
+
 .status-row {
     display: flex;
     flex-wrap: wrap;
