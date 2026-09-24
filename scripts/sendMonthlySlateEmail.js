@@ -20,7 +20,7 @@ async function run() {
   const profilesRes = await fetch(`${SUPABASE_URL}/rest/v1/profiles?select=email,role`, { headers });
   if (!profilesRes.ok) throw new Error("Erreur fetch profiles: " + await profilesRes.text());
   const profiles = await profilesRes.json();
-  
+
   const admins = profiles.filter(p => p.role === 'admin' || p.email === 'sebastien.tessier41@orange.fr');
   let adminEmails = admins.map(m => m.email).filter(Boolean).join(',');
   if (!adminEmails) adminEmails = "billardclubromo41@gmail.com";
@@ -37,16 +37,16 @@ async function run() {
     const amount = qty * price;
 
     if (amount > 0) {
-        if (!memberData[memberName]) {
-            memberData[memberName] = { balance: 0, email: memberEmail };
-        }
-        memberData[memberName].balance += amount;
-        totalGlobal += amount;
+      if (!memberData[memberName]) {
+        memberData[memberName] = { balance: 0, email: memberEmail };
+      }
+      memberData[memberName].balance += amount;
+      totalGlobal += amount;
     }
   });
 
   const memberNames = Object.keys(memberData).sort((a, b) => a.localeCompare(b));
-  
+
   let alertList = "";
   let hasAlerts = false;
 
@@ -58,7 +58,7 @@ async function run() {
   });
 
   if (!hasAlerts) {
-      alertList = "✅ Aucune ardoise en attente. Tout le monde est à jour !\n";
+    alertList = "✅ Aucune ardoise en attente. Tout le monde est à jour !\n";
   }
 
   const globalStock = `Total global des ardoises : ${totalGlobal.toFixed(2)} €\n`;
@@ -99,7 +99,7 @@ async function run() {
         user_id: "eMrX8i7i3dlg3WN20",
         template_params: {
           article_nom: "Rappel : Votre ardoise au Billard Club Romorantinais",
-          alert_list: `Bonjour ${name},\n\nSauf erreur de notre part, vous avez une ardoise en attente de règlement d'un montant de ${data.balance.toFixed(2)} €.\nMerci de penser à la régler lors de votre prochain passage au club ou avant la fin du mois pour faciliter notre gestion comptable.\n\nSportivement,\nL'équipe du Billard Club.`,
+          alert_list: `Bonjour ${name},\n\nSauf erreur de notre part, vous avez une ardoise en attente de règlement d'un montant de ${data.balance.toFixed(2)} €.\nMerci de penser à la régler lors de votre prochain passage au club ou avant la fin du mois pour faciliter notre gestion comptable.\n\nSportivement,\nL'équipe du Billard Blackball Romorantinais.`,
           global_stock: "", // Left empty for the member email
           to_email: data.email
         }
@@ -111,16 +111,16 @@ async function run() {
           headers: { "Content-Type": "application/json", "Origin": "http://localhost" },
           body: JSON.stringify(memberPayload)
         });
-        
+
         if (!memberRes.ok) {
-           console.error(`Erreur d'envoi pour ${name} (${data.email}): ` + await memberRes.text());
+          console.error(`Erreur d'envoi pour ${name} (${data.email}): ` + await memberRes.text());
         } else {
-           console.log(`Rappel envoyé avec succès à ${name} (${data.email})`);
+          console.log(`Rappel envoyé avec succès à ${name} (${data.email})`);
         }
       } catch (err) {
         console.error(`Exception lors de l'envoi pour ${name}:`, err);
       }
-      
+
       // Petite pause pour éviter de saturer l'API EmailJS
       await new Promise(resolve => setTimeout(resolve, 500));
     }
