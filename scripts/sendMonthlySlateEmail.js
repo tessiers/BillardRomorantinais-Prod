@@ -66,7 +66,7 @@ async function run() {
   // 4. Send the global report email to admins
   const adminPayload = {
     service_id: "service_j1zneme",
-    template_id: "template_08br43s",
+    template_id: "template_6azzu2l",
     user_id: "eMrX8i7i3dlg3WN20",
     template_params: {
       article_nom: "Rapport Mensuel des Ardoises (27 du mois) - 100% AUTOMATIQUE",
@@ -96,7 +96,7 @@ async function run() {
     if (data.email && data.balance > 0) {
       const memberPayload = {
         service_id: "service_j1zneme",
-        template_id: "template_08br43s",
+        template_id: "template_6azzu2l",
         user_id: "eMrX8i7i3dlg3WN20",
         template_params: {
           article_nom: "Rappel : Votre ardoise au Billard Club Romorantinais",
