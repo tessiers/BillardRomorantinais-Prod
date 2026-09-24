@@ -3612,8 +3612,17 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             return flat;
         } else {
-            // Tirage au sort: on aplatit
-            return resultsPerPoule.flat();
+            // Tirage au sort: on aplatit par rang (tous les 1ers, puis tous les 2èmes) pour garantir que les BYEs aillent aux meilleurs
+            const flat = [];
+            const maxQualifies = Math.max(...resultsPerPoule.map(r => r.length));
+            for (let i = 0; i < maxQualifies; i++) {
+                for (let p = 0; p < resultsPerPoule.length; p++) {
+                    if (resultsPerPoule[p] && resultsPerPoule[p][i]) {
+                        flat.push(resultsPerPoule[p][i]);
+                    }
+                }
+            }
+            return flat;
         }
     }
 
