@@ -641,7 +641,7 @@ function applyRoleAccessControl() {
     }
 
     for (const item of itemsToInsert) {
-      const drink = drinks.find(d => d.id === item.drink_id);
+      const drink = drinks.find(d => String(d.id) === String(item.drink_id));
       if (drink && drink.stock !== null && drink.stock !== undefined) {
         const newStock = drink.stock - item.quantity;
         await supabaseClient.from('drinks').update({ stock: newStock }).eq('id', drink.id);
