@@ -1,6 +1,6 @@
 // Portail Unifié - Billard & Équitation
 console.log("Portail Unifié : Démarrage du script v2.3.2...");
-
+alert("DEBUG: app.js a bien démarré !");
 let supabaseClient = null;
 let currentUser = null;
 let drinks = [];
@@ -509,6 +509,170 @@ function applyRoleAccessControl() {
   } else {
     if (navHome) navHome.style.display = 'none';
     if (navTournaments) navTournaments.style.display = 'none';
+  }
+
+  // --- GESTION BUVETTE (MODAL) ---
+  window.openBuvetteModal = function() {
+    try {
+      const modal = document.getElementById('buvette-modal');
+      const tbody = document.getElementById('buvette-drinks-list');
+      
+      if (!modal || !tbody) {
+        alert("Erreur: modal ou tbody introuvable.");
+        return;
+      }
+      
+      tbody.innerHTML = '';
+      
+      if (typeof drinks === 'undefined' || !drinks) {
+        alert("Erreur: La variable drinks n'est pas définie ou est vide.");
+        return;
+      }
+      
+      const sortedDrinks = [...drinks].sort((a, b) => a.name.localeCompare(b.name));
+      
+      sortedDrinks.forEach(drink => {
+        if (isMembership(drink)) return;
+    
+        const tr = document.createElement('tr');
+        tr.style.borderBottom = '1px solid rgba(255, 255, 255, 0.05)';
+        tr.innerHTML = `
+          <td style="text-align: left; padding: 0.8rem 0.5rem;">
+            <div style="font-weight: 600;">${drink.name}</div>
+            <div style="font-size: 0.8rem; color: var(--text-muted);">Stock: ${drink.stock !== null ? drink.stock : 'N/A'}</div>
+          </td>
+          <td style="padding: 0.8rem 0.5rem; text-align: center;">${drink.price.toFixed(2)}€</td>
+          <td style="padding: 0.8rem 0.5rem; text-align: center;">
+            <input type="number" min="0" value="0" class="buvette-qty chakra-input" data-id="${drink.id}" data-price="${drink.price}" style="width: 70px; text-align: center;">
+          </td>
+          <td style="padding: 0.8rem 0.5rem; text-align: center;">
+            <input type="checkbox" class="buvette-free" data-id="${drink.id}" style="width: 1.5rem; height: 1.5rem; cursor: pointer;">
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    
+      const inputs = tbody.querySelectorAll('.buvette-qty, .buvette-free');
+      inputs.forEach(input => {
+        input.addEventListener('change', window.calculateBuvetteTotal);
+        input.addEventListener('input', window.calculateBuvetteTotal);
+      });
+    
+      window.calculateBuvetteTotal();
+      modal.classList.remove('hidden');
+    } catch(e) {
+      alert("Erreur dans openBuvetteModal: " + e.message);
+    }
+  };
+
+  window.closeBuvetteModal = function() {
+    const modal = document.getElementById('buvette-modal');
+    if (modal) modal.classList.add('hidden');
+  };
+
+  window.calculateBuvetteTotal = function() {
+    const tbody = document.getElementById('buvette-drinks-list');
+    if (!tbody) return;
+
+    let total = 0;
+    const rows = tbody.querySelectorAll('tr');
+    rows.forEach(row => {
+      const qtyInput = row.querySelector('.buvette-qty');
+      const freeCheck = row.querySelector('.buvette-free');
+      
+      if (qtyInput && freeCheck) {
+        const qty = parseInt(qtyInput.value) || 0;
+        const price = parseFloat(qtyInput.getAttribute('data-price')) || 0;
+        const isFree = freeCheck.checked;
+        
+        if (qty > 0 && !isFree) {
+          total += qty * price;
+        }
+      }
+    });
+
+    const totalEl = document.getElementById('buvette-total');
+    if (totalEl) {
+      totalEl.textContent = total.toFixed(2) + ' €';
+    }
+  };
+
+  window.validateBuvetteOrder = async function() {
+    const tbody = document.getElementById('buvette-drinks-list');
+    if (!tbody) return;
+
+    const rows = tbody.querySelectorAll('tr');
+    const itemsToInsert = [];
+    
+    rows.forEach(row => {
+      const qtyInput = row.querySelector('.buvette-qty');
+      const freeCheck = row.querySelector('.buvette-free');
+      
+      if (qtyInput && freeCheck) {
+        const qty = parseInt(qtyInput.value) || 0;
+        if (qty > 0) {
+          const id = qtyInput.getAttribute('data-id');
+          const price = parseFloat(qtyInput.getAttribute('data-price')) || 0;
+          const isFree = freeCheck.checked;
+          
+          itemsToInsert.push({
+            drink_id: id,
+            quantity: qty,
+            price_at_time: isFree ? 0 : price,
+            member_id: currentUser.id
+          });
+        }
+      }
+    });
+
+    if (itemsToInsert.length === 0) {
+      alert('Aucune boisson sélectionnée.');
+      return;
+    }
+
+    toggleLoading(true);
+    
+    const { error: insertError } = await supabaseClient.from('consumptions').insert(itemsToInsert);
+    
+    if (insertError) {
+      toggleLoading(false);
+      alert('Erreur lors de la validation : ' + insertError.message);
+      return;
+    }
+
+    for (const item of itemsToInsert) {
+      const drink = drinks.find(d => d.id === item.drink_id);
+      if (drink && drink.stock !== null && drink.stock !== undefined) {
+        const newStock = drink.stock - item.quantity;
+        await supabaseClient.from('drinks').update({ stock: newStock }).eq('id', drink.id);
+        drink.stock = newStock;
+      }
+    }
+
+    toggleLoading(false);
+    window.closeBuvetteModal();
+    alert('Consommations validées avec succès !');
+    loadAppData(); 
+  };
+
+  // Affichage du bouton Buvette uniquement pour sebastien.tessier41@orange.fr
+  const buvetteBtn = document.getElementById('buvette-header-btn');
+  if (buvetteBtn) {
+    // Attach event listener explicitly
+    buvetteBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (typeof window.openBuvetteModal === 'function') {
+        window.openBuvetteModal();
+      } else {
+        alert("openBuvetteModal n'est pas définie !");
+      }
+    });
+
+    if (currentUser?.email?.toLowerCase() === 'sebastien.tessier41@orange.fr') {
+      buvetteBtn.classList.remove('hidden');
+    } else {
+      buvetteBtn.classList.add('hidden');
+    }
   }
 
   if (isAdminTabVisible) {
@@ -2425,4 +2589,4 @@ document.getElementById('csv-import').addEventListener('change', async (e) => {
   }
 });
 
-
+// Fin du fichier app.js

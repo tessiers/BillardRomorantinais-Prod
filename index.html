@@ -263,10 +263,8 @@
             </div>
           </div>
 
-          <div class="dashboard-grid">
 
 
-          </div>
         </section>
 
         <!-- Section Gestion Club -->
@@ -832,6 +830,9 @@
           <div class="module-header" style="flex-direction: column; align-items: flex-start; gap: 1.5rem;">
             <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
               <h2>Administration du Club</h2>
+              <button class="btn btn-main hidden" id="buvette-header-btn" style="padding: 0.6rem 1rem; font-size: 0.95rem;" onclick="openBuvetteModal()">
+                <i data-lucide="shopping-cart" style="width: 16px; height: 16px;"></i> Ouvrir le Mode Buvette
+              </button>
             </div>
             <div class="admin-tabs"
               style="display: flex; gap: 1rem; border-bottom: 1px solid var(--border); width: 100%; padding-bottom: 0.5rem; flex-wrap: wrap;">
@@ -1316,6 +1317,38 @@
 
 
   <!-- Modale de Confirmation de Commande de Boisson -->
+  <!-- Modal Buvette -->
+  <div id="buvette-modal" class="modal-overlay hidden">
+    <div class="modal-content" style="max-width: 600px; width: 100%; max-height: 90vh; display: flex; flex-direction: column;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h3 style="margin: 0;"><i data-lucide="shopping-cart"></i> Buvette (Externes)</h3>
+        <button onclick="closeBuvetteModal()" class="btn-close" style="background: none; border: none; color: var(--text-muted); cursor: pointer;"><i data-lucide="x"></i></button>
+      </div>
+      <div class="table-scroll" style="flex: 1; overflow-y: auto; margin-bottom: 1rem;">
+        <table style="width: 100%;">
+          <thead>
+            <tr>
+              <th style="text-align: left;">Boisson</th>
+              <th style="width: 70px;">Prix</th>
+              <th style="width: 120px; text-align: center;">Quantité</th>
+              <th style="width: 80px; text-align: center;">Gratuit</th>
+            </tr>
+          </thead>
+          <tbody id="buvette-drinks-list">
+            <!-- Injecté par JS -->
+          </tbody>
+        </table>
+      </div>
+      <div style="background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <span style="font-size: 1.2rem; font-weight: 600;">Total :</span>
+        <span id="buvette-total" style="font-size: 1.5rem; font-weight: 700; color: var(--accent-orange);">0.00 €</span>
+      </div>
+      <button id="buvette-validate-btn" class="btn btn-main" style="width: 100%; padding: 1rem; font-size: 1.1rem;" onclick="validateBuvetteOrder()">
+        <i data-lucide="check-circle"></i> Valider les consommations
+      </button>
+    </div>
+  </div>
+
   <div id="drink-order-confirm-modal" class="modal-overlay hidden">
     <div class="modal-card drink-confirm-card">
       <h3 class="modal-title">Confirmer la commande</h3>
@@ -1383,7 +1416,7 @@
     src="https://connect.facebook.net/fr_FR/sdk.js#xfbml=1&version=v17.0"></script>
   <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
   <script src="tournaments.js?v=2.3.2" defer></script>
-  <script src="app.js?v=2.8.1" defer></script>
+  <script src="app.js?v=2.8.7" defer></script>
   <script>
     // Initialisation des icônes Lucide
     lucide.createIcons();

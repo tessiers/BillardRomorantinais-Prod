@@ -1,5 +1,5 @@
-const SUPABASE_URL = "https://iwtuwtvgrocmxfkmidlk.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml3dHV3dHZncm9jbXhma21pZGxrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzNTM5NzUsImV4cCI6MjA5MzkyOTk3NX0.ISCfQxrD4dAnygL-teYon-KoJWrzDuTEHFZpe9tslmY";
+const SUPABASE_URL = "https://cuszxcwhyfgtvbbylrdx.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN1c3p4Y3doeWZndHZiYnlscmR4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkzMDg2ODEsImV4cCI6MjEwNDg4NDY4MX0.JJdMg7_h_6szxPzZszcp7l0HOHazgVRX4z-LHsZHfxw";
 
 async function run() {
   const email = 'zizou41220@gmail.com';
