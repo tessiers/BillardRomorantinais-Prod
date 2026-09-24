@@ -493,6 +493,10 @@ function applyRoleAccessControl() {
   const navTournaments = document.querySelector('.nav-menu li[data-section="tournaments"]');
   const navAdmin = document.querySelector('.nav-menu li[data-section="admin"]');
   const mobileNavBar = document.getElementById('mobile-nav-bar');
+  
+  const mobileHome = document.querySelector('.mobile-nav-item[data-section="home"]');
+  const mobileTournaments = document.querySelector('.mobile-nav-item[data-section="tournaments"]');
+  const mobileAdmin = document.querySelector('.mobile-nav-item[data-section="admin"]');
 
   // Find currently active section
   const activeNav = document.querySelector('.nav-menu li.active');
@@ -502,13 +506,18 @@ function applyRoleAccessControl() {
   const isSuperAdmin = role === 'admin';
   const isAdminTabVisible = isSuperAdmin || canManageStock;
 
+  if (mobileNavBar) mobileNavBar.style.display = ''; // Toujours afficher la barre mobile
+
   if (isSuperAdmin) {
     if (navHome) navHome.style.display = '';
     if (navTournaments) navTournaments.style.display = '';
-    if (mobileNavBar) mobileNavBar.style.display = '';
+    if (mobileHome) mobileHome.style.display = '';
+    if (mobileTournaments) mobileTournaments.style.display = '';
   } else {
-    if (navHome) navHome.style.display = 'none';
+    if (navHome) navHome.style.display = ''; // Tous les membres voient l'accueil
     if (navTournaments) navTournaments.style.display = 'none';
+    if (mobileHome) mobileHome.style.display = '';
+    if (mobileTournaments) mobileTournaments.style.display = 'none';
   }
 
   // --- GESTION BUVETTE (MODAL) ---
@@ -681,7 +690,7 @@ function applyRoleAccessControl() {
 
   if (isAdminTabVisible) {
     if (navAdmin) navAdmin.style.display = '';
-    if (mobileNavBar) mobileNavBar.style.display = ''; // Assure mobile nav is visible for admin tab
+    if (mobileAdmin) mobileAdmin.style.display = ''; 
 
     if (currentSection) {
       switchSection(currentSection);
@@ -690,15 +699,15 @@ function applyRoleAccessControl() {
     }
   } else {
     if (navAdmin) navAdmin.style.display = 'none';
-    if (!isSuperAdmin) {
-      if (mobileNavBar) mobileNavBar.style.display = 'none';
-    }
+    if (mobileAdmin) mobileAdmin.style.display = 'none';
 
-    // Les membres normaux sont strictement redirigés vers Gestion Club
-    if (currentSection !== 'management') {
-      switchSection('management');
+    // Les membres normaux ont le droit d'être sur Accueil ou Gestion
+    if (currentSection !== 'management' && currentSection !== 'home') {
+      switchSection('home');
+    } else if (currentSection) {
+      switchSection(currentSection);
     } else {
-      switchSection('management');
+      switchSection('home');
     }
   }
 }
@@ -1386,10 +1395,12 @@ document.getElementById('save-stock-btn')?.addEventListener('click', async () =>
 function showView(id) {
   const loginView = document.getElementById('login-view');
   const appShell = document.getElementById('app-shell');
+  const lockScreenView = document.getElementById('lock-screen-view');
   const target = document.getElementById(id);
 
   if (loginView) loginView.classList.add('hidden');
   if (appShell) appShell.classList.add('hidden');
+  if (lockScreenView) lockScreenView.classList.add('hidden');
   if (target) target.classList.remove('hidden');
 }
 
