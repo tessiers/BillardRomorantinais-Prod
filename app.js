@@ -1060,86 +1060,6 @@ function switchSection(name) {
 }
 
 // --- DATA LOADING ---
-async function checkAndSendSundayEmail() {
-  const now = new Date();
-  // Dimanche = 0. Envoi après 18h
-  if (now.getDay() !== 0 || now.getHours() < 18) return;
-
-  const todayStr = now.toISOString().split('T')[0];
-  
-  // Vérifier si déjà envoyé
-  const { data: st, error: stErr } = await supabaseClient.from('app_settings').select('setting_value').eq('setting_key', 'last_stock_email_date').maybeSingle();
-  if (stErr) {
-    console.warn("Impossible de lire app_settings.last_stock_email_date", stErr);
-  }
-  
-  if (st && st.setting_value === todayStr) {
-    return; // Déjà envoyé aujourd'hui
-  }
-
-  if (typeof emailjs === 'undefined') return;
-
-  // Récupérer les stocks
-  const { data: allDrinks } = await supabaseClient.from('drinks').select('*');
-  let alertList = "";
-  let globalStock = "";
-  let hasAlerts = false;
-
-  if (allDrinks) {
-    allDrinks.sort((a, b) => a.name.localeCompare(b.name));
-    let alertsAtThreshold = [];
-    let alertsBelowThreshold = [];
-
-    allDrinks.forEach(d => {
-      const stock = d.stock || 0;
-      const threshold = d.alert_threshold || 0;
-      const nomBoisson = d.name.padEnd(25, ' ');
-      const icon = (stock <= threshold) ? '🚨' : '✅';
-      globalStock += `${icon} ${nomBoisson} : ${stock}\n`;
-
-      if (stock <= threshold) {
-        hasAlerts = true;
-        const line = `🚨 ${nomBoisson} : ${stock} (Seuil: ${threshold})\n`;
-        if (stock === threshold) {
-          alertsAtThreshold.push(line);
-        } else {
-          alertsBelowThreshold.push({ stock, line });
-        }
-      }
-    });
-
-    alertsBelowThreshold.sort((a, b) => a.stock - b.stock);
-    alertList = alertsAtThreshold.join('') + alertsBelowThreshold.map(a => a.line).join('');
-  }
-
-  if (!hasAlerts) alertList = "Aucune boisson en alerte.\n";
-
-  // Récupérer les emails de ceux qui ONT les droits de stock
-  const { data: managers } = await supabaseClient
-    .from('profiles')
-    .select('email')
-    .eq('can_manage_stock', true);
-
-  let adminEmails = "";
-  if (managers && managers.length > 0) {
-    adminEmails = managers.map(m => m.email).filter(Boolean).join(',');
-  }
-
-  if (!adminEmails) adminEmails = "billardclubromo41@gmail.com";
-
-  emailjs.send("service_j1zneme", "template_08br43s", {
-    article_nom: "Rapport Hebdomadaire (Dimanche)",
-    alert_list: alertList,
-    global_stock: globalStock,
-    admin_emails: adminEmails
-  }, "eMrX8i7i3dlg3WN20").then(async () => {
-    console.log("Email d'alerte hebdomadaire envoyé.");
-    await supabaseClient.from('app_settings').upsert({ setting_key: 'last_stock_email_date', setting_value: todayStr });
-  }).catch(err => {
-    console.error("Erreur envoi EmailJS :", err);
-  });
-}
-
 async function loadAppData() {
   toggleLoading(true);
   try {
@@ -1250,9 +1170,6 @@ async function loadAppData() {
     // 5. Appliquer les droits d'accès par rôle & démarrer le verrouillage d'inactivité
     applyRoleAccessControl();
     resetInactivityTimer();
-
-    // 6. Vérifier et envoyer l'email du dimanche soir
-    checkAndSendSundayEmail();
 
   } catch (err) {
     console.error("Erreur critique loadAppData:", err);
