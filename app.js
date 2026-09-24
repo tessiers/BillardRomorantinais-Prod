@@ -615,12 +615,18 @@ function applyRoleAccessControl() {
           const price = parseFloat(qtyInput.getAttribute('data-price')) || 0;
           const isFree = freeCheck.checked;
           
-          itemsToInsert.push({
+          let itemPayload = {
             drink_id: id,
             quantity: qty,
             price_at_time: isFree ? 0 : price,
             member_id: currentUser.id
-          });
+          };
+          if (isFree) {
+            itemPayload.is_paid = true;
+            itemPayload.paid_at = new Date().toISOString();
+            itemPayload.paid_by_name = currentUser.full_name || currentUser.email;
+          }
+          itemsToInsert.push(itemPayload);
         }
       }
     });
