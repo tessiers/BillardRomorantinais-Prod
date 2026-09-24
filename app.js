@@ -1049,8 +1049,8 @@ function initNavigation() {
 
 function switchSection(name) {
   const role = currentUser?.profile?.role || 'member';
-  if (role !== 'admin' && name !== 'management') {
-    name = 'management';
+  if (role !== 'admin' && name !== 'management' && name !== 'home') {
+    name = 'home';
   }
 
   document.querySelectorAll('.nav-menu li').forEach(i => i.classList.remove('active'));
