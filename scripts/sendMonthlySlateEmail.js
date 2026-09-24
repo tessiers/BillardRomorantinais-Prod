@@ -69,13 +69,12 @@ async function run() {
     template_id: "template_6azzu2l",
     user_id: "eMrX8i7i3dlg3WN20",
     template_params: {
-      article_nom: "Rapport Mensuel des Ardoises (27 du mois) - 100% AUTOMATIQUE",
+      article_nom: "Rapport de fin de mois des ardoises",
       alert_list: alertList,
       global_stock: globalStock,
       to_email: adminEmails
     }
   };
-
   console.log("Envoi du rapport global aux administrateurs via EmailJS...");
   const adminRes = await fetch("https://api.emailjs.com/api/v1.0/email/send", {
     method: "POST",
