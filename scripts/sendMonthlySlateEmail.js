@@ -79,7 +79,7 @@ async function run() {
   console.log("Envoi du rapport global aux administrateurs via EmailJS...");
   const adminRes = await fetch("https://api.emailjs.com/api/v1.0/email/send", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", "Origin": "http://localhost" },
     body: JSON.stringify(adminPayload)
   });
 
@@ -109,7 +109,7 @@ async function run() {
       try {
         const memberRes = await fetch("https://api.emailjs.com/api/v1.0/email/send", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", "Origin": "http://localhost" },
           body: JSON.stringify(memberPayload)
         });
         

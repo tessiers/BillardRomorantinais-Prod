@@ -72,7 +72,7 @@ async function run() {
   console.log("Envoi via EmailJS REST API...");
   const emailRes = await fetch("https://api.emailjs.com/api/v1.0/email/send", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", "Origin": "http://localhost" },
     body: JSON.stringify(emailPayload)
   });
 
