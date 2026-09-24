@@ -279,14 +279,23 @@
       if (!confirm("Marquer TOUTE l'ardoise comme payée pour ce membre ?")) return;
 
       show('loading');
+      
+      const payload = { 
+        is_paid: true,
+        paid_at: new Date().toISOString(),
+        paid_by_name: currentUser ? (currentUser.full_name || currentUser.email) : 'Admin'
+      };
+
       const { error } = await supabaseClient
         .from('consumptions')
-        .update({ is_paid: true })
+        .update(payload)
         .eq('member_id', memberId)
         .eq('is_paid', false);
 
       hide('loading');
-      if (error) alert("Erreur: " + error.message);
+      if (error) {
+        alert("Erreur: " + error.message + "\n\nAstuce: Avez-vous bien ajouté les colonnes 'paid_at' (type timestampz) et 'paid_by_name' (type text) dans la table 'consumptions' sur Supabase ?");
+      }
       else {
         alert("Ardoise effacée !");
         loadAdminData();
@@ -652,7 +661,7 @@
         const ws_stocks = XLSX.utils.aoa_to_sheet(stocksDataArray);
 
         // 2. Historique Consommations
-        const consDataArray = [["Date", "Membre", "Email", "Boisson", "Quantité", "Prix Unitaire", "Total", "Payé"]];
+        const consDataArray = [["Date", "Membre", "Email", "Boisson", "Quantité", "Prix Unitaire", "Total", "Payé", "Date d'encaissement", "Encaissé par"]];
         consData.forEach(c => {
           const date = new Date(c.created_at).toLocaleString('fr-FR');
           const member = c.profiles ? c.profiles.full_name : "Inconnu";
@@ -661,8 +670,18 @@
           const qty = c.quantity || 1;
           const price = c.price_at_time || 0;
           const total = qty * price;
-          const paid = c.is_paid ? "Oui" : "Non";
-          consDataArray.push([date, member, email, drink, qty, price, total, paid]);
+          
+          let paid = "Non";
+          if (price === 0) {
+            paid = "Gratuite";
+          } else if (c.is_paid) {
+            paid = "Oui";
+          }
+
+          const dateEncaissement = c.paid_at ? new Date(c.paid_at).toLocaleString('fr-FR') : (c.is_paid && price > 0 ? "Inconnue" : "");
+          const encaissePar = c.paid_by_name || (c.is_paid && price > 0 ? "Inconnu" : "");
+
+          consDataArray.push([date, member, email, drink, qty, price, total, paid, dateEncaissement, encaissePar]);
         });
         const ws_cons = XLSX.utils.aoa_to_sheet(consDataArray);
 
