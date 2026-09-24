@@ -866,82 +866,6 @@ function initNavigation() {
         // Décrémenter le stock
         const newStock = drink.stock - quantity;
         await supabaseClient.from('drinks').update({ stock: newStock }).eq('id', id);
-
-        // Alerte EmailJS si on atteint ou passe sous le seuil d'alerte
-        const alertThreshold = drink.alert_threshold || 0;
-        if (newStock <= alertThreshold && drink.stock > alertThreshold) {
-          if (typeof emailjs !== 'undefined') {
-            // Fetch global stock to include in the email
-            const { data: allDrinks } = await supabaseClient.from('drinks').select('*');
-            let alertList = "";
-            let globalStock = "";
-
-            let hasAlerts = false;
-            if (allDrinks) {
-              const currentInList = allDrinks.find(d => d.id === id);
-              if (currentInList) currentInList.stock = newStock;
-
-              // Trier par ordre alphabétique pour l'état global
-              allDrinks.sort((a, b) => a.name.localeCompare(b.name));
-
-              let alertsAtThreshold = [];
-              let alertsBelowThreshold = [];
-
-              allDrinks.forEach(d => {
-                const stock = d.stock || 0;
-                const threshold = d.alert_threshold || 0;
-
-                const nomBoisson = d.name.padEnd(25, ' ');
-                const icon = (stock <= threshold) ? '🚨' : '✅';
-
-                // Ligne pour l'état global
-                globalStock += `${icon} ${nomBoisson} : ${stock}\n`;
-
-                // Catégorisation pour les alertes
-                if (stock <= threshold) {
-                  hasAlerts = true;
-                  const line = `🚨 ${nomBoisson} : ${stock} (Seuil: ${threshold})\n`;
-                  if (stock === threshold) {
-                    alertsAtThreshold.push(line);
-                  } else {
-                    alertsBelowThreshold.push({ stock, line });
-                  }
-                }
-              });
-
-              // Trier ceux en dessous du seuil par ordre croissant de stock
-              alertsBelowThreshold.sort((a, b) => a.stock - b.stock);
-
-              alertList = alertsAtThreshold.join('') + alertsBelowThreshold.map(a => a.line).join('');
-            }
-
-            if (!hasAlerts) alertList = "Aucune autre boisson en alerte.\n";
-
-            // Récupérer les emails des administrateurs et gestionnaires de stocks
-            const { data: managers } = await supabaseClient
-              .from('profiles')
-              .select('email')
-              .or('role.eq.admin,can_manage_stock.eq.true');
-
-            let adminEmails = "";
-            if (managers && managers.length > 0) {
-              adminEmails = managers.map(m => m.email).filter(Boolean).join(',');
-            }
-
-            emailjs.send("service_j1zneme", "template_08br43s", {
-              article_nom: drink.name,
-              alert_list: alertList,
-              global_stock: globalStock,
-              admin_emails: adminEmails || "billardclubromo41@gmail.com" // Par défaut si aucun trouvé
-            }, "eMrX8i7i3dlg3WN20").then(() => {
-              console.log("Email d'alerte envoyé pour " + drink.name);
-            }).catch(err => {
-              console.error("Erreur envoi EmailJS :", err);
-            });
-          } else {
-            console.warn("EmailJS non chargé.");
-          }
-        }
       }
 
       toggleLoading(false);
@@ -1136,6 +1060,89 @@ function switchSection(name) {
 }
 
 // --- DATA LOADING ---
+async function checkAndSendSundayEmail() {
+  const now = new Date();
+  // Dimanche = 0. Envoi après 18h
+  if (now.getDay() !== 0 || now.getHours() < 18) return;
+
+  const todayStr = now.toISOString().split('T')[0];
+  
+  // Vérifier si déjà envoyé
+  const { data: st, error: stErr } = await supabaseClient.from('settings').select('id, last_stock_email_date').limit(1).maybeSingle();
+  if (stErr) {
+    console.warn("Impossible de lire settings.last_stock_email_date", stErr);
+    return;
+  }
+  
+  if (st && st.last_stock_email_date === todayStr) {
+    return; // Déjà envoyé aujourd'hui
+  }
+
+  if (typeof emailjs === 'undefined') return;
+
+  // Récupérer les stocks
+  const { data: allDrinks } = await supabaseClient.from('drinks').select('*');
+  let alertList = "";
+  let globalStock = "";
+  let hasAlerts = false;
+
+  if (allDrinks) {
+    allDrinks.sort((a, b) => a.name.localeCompare(b.name));
+    let alertsAtThreshold = [];
+    let alertsBelowThreshold = [];
+
+    allDrinks.forEach(d => {
+      const stock = d.stock || 0;
+      const threshold = d.alert_threshold || 0;
+      const nomBoisson = d.name.padEnd(25, ' ');
+      const icon = (stock <= threshold) ? '🚨' : '✅';
+      globalStock += `${icon} ${nomBoisson} : ${stock}\n`;
+
+      if (stock <= threshold) {
+        hasAlerts = true;
+        const line = `🚨 ${nomBoisson} : ${stock} (Seuil: ${threshold})\n`;
+        if (stock === threshold) {
+          alertsAtThreshold.push(line);
+        } else {
+          alertsBelowThreshold.push({ stock, line });
+        }
+      }
+    });
+
+    alertsBelowThreshold.sort((a, b) => a.stock - b.stock);
+    alertList = alertsAtThreshold.join('') + alertsBelowThreshold.map(a => a.line).join('');
+  }
+
+  if (!hasAlerts) alertList = "Aucune boisson en alerte.\n";
+
+  // Récupérer les emails de ceux qui ONT les droits de stock
+  const { data: managers } = await supabaseClient
+    .from('profiles')
+    .select('email')
+    .eq('can_manage_stock', true);
+
+  let adminEmails = "";
+  if (managers && managers.length > 0) {
+    adminEmails = managers.map(m => m.email).filter(Boolean).join(',');
+  }
+
+  if (!adminEmails) adminEmails = "billardclubromo41@gmail.com";
+
+  emailjs.send("service_j1zneme", "template_08br43s", {
+    article_nom: "Rapport Hebdomadaire (Dimanche)",
+    alert_list: alertList,
+    global_stock: globalStock,
+    admin_emails: adminEmails
+  }, "eMrX8i7i3dlg3WN20").then(async () => {
+    console.log("Email d'alerte hebdomadaire envoyé.");
+    if (st && st.id) {
+      await supabaseClient.from('settings').update({ last_stock_email_date: todayStr }).eq('id', st.id);
+    }
+  }).catch(err => {
+    console.error("Erreur envoi EmailJS :", err);
+  });
+}
+
 async function loadAppData() {
   toggleLoading(true);
   try {
@@ -1246,6 +1253,9 @@ async function loadAppData() {
     // 5. Appliquer les droits d'accès par rôle & démarrer le verrouillage d'inactivité
     applyRoleAccessControl();
     resetInactivityTimer();
+
+    // 6. Vérifier et envoyer l'email du dimanche soir
+    checkAndSendSundayEmail();
 
   } catch (err) {
     console.error("Erreur critique loadAppData:", err);
@@ -1642,7 +1652,11 @@ async function loadAdminData() {
           </td>
           <td class="${balance > 0 ? 'text-danger font-bold' : ''}">${balance.toFixed(2)}€</td>
           <td>
-            <div style="display: flex; gap: 0.5rem;">
+            <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+              <label style="font-size: 0.7rem; display: flex; align-items: center; gap: 0.2rem; cursor: pointer;" title="Accès gestion des stocks et réception de l'email hebdo">
+                <input type="checkbox" onchange="toggleStockRights('${m.id}', this.checked)" ${m.can_manage_stock ? 'checked' : ''}>
+                Gère Stocks
+              </label>
               ${balance > 0 ? `<button class="btn btn-outline" title="Encaisser" onclick="clearMemberBalance('${m.id}')"><i data-lucide="check-circle"></i></button>` : ''}
               <button class="btn btn-outline" title="${m.role === 'admin' ? 'Rétrograder en membre simple' : 'Promouvoir Admin'}" onclick="toggleAdminRole('${m.id}', '${m.role}')">
                 <i data-lucide="${m.role === 'admin' ? 'shield-off' : 'shield'}" style="width: 16px; height: 16px;"></i>
@@ -1787,6 +1801,14 @@ async function deleteProfile(id) {
   if (error) alert("Erreur: " + error.message);
   else loadAdminData();
 }
+
+window.toggleStockRights = async function(id, checked) {
+  toggleLoading(true);
+  const { error } = await supabaseClient.from('profiles').update({ can_manage_stock: checked }).eq('id', id);
+  toggleLoading(false);
+  if (error) alert("Erreur: " + error.message);
+  else loadAdminData();
+};
 
 async function toggleMemberApproval(profileId, isApproved) {
   show('loading');

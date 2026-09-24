@@ -65,7 +65,11 @@
           <td class="${isExpired ? 'text-danger font-bold' : (isJ4 ? 'text-warning font-bold' : 'text-success font-bold')}">${lastSub ? new Date(lastSub.end_date).toLocaleDateString() : '-'}</td>
           <td class="${balance > 0 ? 'text-danger font-bold' : ''}">${balance.toFixed(2)}€</td>
           <td>
-            <div style="display: flex; gap: 0.5rem;">
+            <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+              <label style="font-size: 0.7rem; display: flex; align-items: center; gap: 0.2rem; cursor: pointer;" title="Accès gestion des stocks et réception de l'email hebdo">
+                <input type="checkbox" onchange="toggleStockRights('${m.id}', this.checked)" ${m.can_manage_stock ? 'checked' : ''}>
+                Gère Stocks
+              </label>
               ${balance > 0 ? `<button class="btn btn-outline" title="Encaisser" onclick="clearMemberBalance('${m.id}')"><i data-lucide="check-circle"></i></button>` : ''}
               <button class="btn btn-outline btn-danger" title="Supprimer le profil" onclick="deleteProfile('${m.id}')"><i data-lucide="user-minus"></i></button>
             </div>
@@ -166,6 +170,14 @@
       if (error) alert("Erreur: " + error.message);
       else loadAdminData();
     }
+
+    window.toggleStockRights = async function(id, checked) {
+      show('loading');
+      const { error } = await supabaseClient.from('profiles').update({ can_manage_stock: checked }).eq('id', id);
+      hide('loading');
+      if (error) alert("Erreur: " + error.message);
+      else loadAdminData();
+    };
 
     // Modal Nouveau Membre
     document.getElementById('add-member-btn').addEventListener('click', async () => {
