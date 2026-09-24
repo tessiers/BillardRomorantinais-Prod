@@ -1068,13 +1068,12 @@ async function checkAndSendSundayEmail() {
   const todayStr = now.toISOString().split('T')[0];
   
   // Vérifier si déjà envoyé
-  const { data: st, error: stErr } = await supabaseClient.from('settings').select('id, last_stock_email_date').limit(1).maybeSingle();
+  const { data: st, error: stErr } = await supabaseClient.from('app_settings').select('setting_value').eq('setting_key', 'last_stock_email_date').maybeSingle();
   if (stErr) {
-    console.warn("Impossible de lire settings.last_stock_email_date", stErr);
-    return;
+    console.warn("Impossible de lire app_settings.last_stock_email_date", stErr);
   }
   
-  if (st && st.last_stock_email_date === todayStr) {
+  if (st && st.setting_value === todayStr) {
     return; // Déjà envoyé aujourd'hui
   }
 
@@ -1135,9 +1134,7 @@ async function checkAndSendSundayEmail() {
     admin_emails: adminEmails
   }, "eMrX8i7i3dlg3WN20").then(async () => {
     console.log("Email d'alerte hebdomadaire envoyé.");
-    if (st && st.id) {
-      await supabaseClient.from('settings').update({ last_stock_email_date: todayStr }).eq('id', st.id);
-    }
+    await supabaseClient.from('app_settings').upsert({ setting_key: 'last_stock_email_date', setting_value: todayStr });
   }).catch(err => {
     console.error("Erreur envoi EmailJS :", err);
   });
