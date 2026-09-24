@@ -619,13 +619,11 @@ function applyRoleAccessControl() {
             drink_id: id,
             quantity: qty,
             price_at_time: isFree ? 0 : price,
-            member_id: currentUser.id
+            member_id: currentUser.id,
+            is_paid: true,
+            paid_at: new Date().toISOString(),
+            paid_by_name: currentUser.full_name || currentUser.email
           };
-          if (isFree) {
-            itemPayload.is_paid = true;
-            itemPayload.paid_at = new Date().toISOString();
-            itemPayload.paid_by_name = currentUser.full_name || currentUser.email;
-          }
           itemsToInsert.push(itemPayload);
         }
       }
